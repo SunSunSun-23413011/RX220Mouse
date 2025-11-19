@@ -220,10 +220,9 @@ void main(void)
   MOTOR_EN =0;  // モータOFF
 
   // 起動音
-  beep( 3, 150 );
+  beep( 1, 150 );
   beep( 8, 150 );
-  beep( 0, 300 );
-  beep( 3, 150 );
+  beep( 1, 150 );
   beep( 8, 150 );
   // タイトル表示
   LCD_print( 0, "LE-S200P" );
@@ -477,7 +476,7 @@ void timerc_200us( void )
     }else{
       if( speed > speed_now )       speed_now++;  // 加速
       else if( speed < speed_now )  speed_now--;  // 減速
-      if( speed_now >= 500 ) speed_now = 499;     // 最高速度
+      if( speed_now >= 2000 ) speed_now = 1999;     // 最高速度
       if( speed_now < 0     ) speed_now = 0;      // 最低速度
 
       acc_num = AccTable[ speed_now ];     // 加速度テーブルから値取得

@@ -1,16 +1,13 @@
 品質記録情報
-2025年11月14日 15:19:14
+2025年11月19日 20:40:37
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
-RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
-RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 60 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 60 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 55 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 55 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 Renesas Optimizing Linker Completed
------- ビルド終了(エラー:0個, 警告:5個)(RX220Mouse2, DefaultBuild) ------
+------ ビルド終了(エラー:0個, 警告:2個)(RX220Mouse2, DefaultBuild) ------
 
 --- CommandFile 1 ---
 DefaultBuild\RX220Mouse2.clnk :
@@ -37,8 +34,8 @@ DefaultBuild\RX220Mouse2.clnk :
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: f90a4ad6a0992863d08c6c6817ecb441248f223a
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7adf52f947bb2075760979df0ff6e5b83e498e8d
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 8b0a6dbd907418c5bf7ba6373ece6005800674fc
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 752d826dbb1158680c32ac0beef3533e3fba497c
 
 
 --- システム情報 ---
@@ -49,7 +46,7 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7adf52f947bb2075760979df0ff6e5b83e4
 *.NET Framework バージョン
  Microsoft .NET Framework 4 [.NET 4.8 or later] (533320)
 *WebView2 バージョン
- 142.0.3595.69
+ 142.0.3595.80
 
 --- アプリケーション情報 ---
 *製品名
@@ -70,7 +67,7 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7adf52f947bb2075760979df0ff6e5b83e4
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
-  711
+  713
  *開いているファイル
   0 editors, 0 files, 0 KB
 
