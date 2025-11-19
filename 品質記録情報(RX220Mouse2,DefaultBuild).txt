@@ -1,0 +1,237 @@
+品質記録情報
+2025年11月14日 15:19:14
+
+------ ビルド開始(RX220Mouse2, DefaultBuild) ------
+C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
+RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
+RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
+RX220Mouse2.c(126):W0520069:Integer conversion resulted in truncation
+C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 60 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 60 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+Renesas Optimizing Linker Completed
+------ ビルド終了(エラー:0個, 警告:5個)(RX220Mouse2, DefaultBuild) ------
+
+--- CommandFile 1 ---
+DefaultBuild\RX220Mouse2.clnk :
+-library=DefaultBuild\RX220Mouse2.lib
+-input=DefaultBuild\dbsct.obj
+-input=DefaultBuild\intprg.obj
+-input=DefaultBuild\resetprg.obj
+-input=DefaultBuild\RX220Mouse2.obj
+-input=DefaultBuild\sbrk.obj
+-input=DefaultBuild\vecttbl.obj
+-noprelink
+-output=DefaultBuild\RX220Mouse2.abs
+-list=DefaultBuild\RX220Mouse2.map
+-show=symbol,total_size
+-nooptimize
+-start=B_1,R_1,B_2,R_2,B,R,SU,SI/04,PResetPRG/0FFFC0000,C_1,C_2,C,C$DSEC,C$BSEC,C$INIT,C$VTBL,C$VECT,D_1,D_2,D,P,PIntPRG,W_1,W_2,W,L/0FFFC0100,FIXEDVECT/0FFFFFFD0
+-rom=D=R,D_1=R_1,D_2=R_2
+-nologo
+-end
+-input=DefaultBuild\RX220Mouse2.abs
+-output=DefaultBuild\RX220Mouse2.mot
+-form=stype
+-exit
+
+
+--- SHA1 hash value of output files ---
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: f90a4ad6a0992863d08c6c6817ecb441248f223a
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7adf52f947bb2075760979df0ff6e5b83e498e8d
+
+
+--- システム情報 ---
+*OS バージョン
+ Microsoft Windows 11 Pro (-, 10.0.26100, WOW64)
+*言語
+ 日本語 (日本)
+*.NET Framework バージョン
+ Microsoft .NET Framework 4 [.NET 4.8 or later] (533320)
+*WebView2 バージョン
+ 142.0.3595.69
+
+--- アプリケーション情報 ---
+*製品名
+ CS+ for CC
+*パッケージ・バージョン
+ V8.14.00  [02 Jun 2025]
+*バージョン
+ V9.14.00.04 [25 Apr 2025]
+*アセンブリ・バージョン
+ 3.12.10.1
+*製品ライセンス
+ 
+*実行場所
+ C:\Program Files (x86)\Renesas Electronics\CS+\CC
+*メモリ使用量
+ *プライベート・ワーキング・セット
+  101 MB
+ *GDIオブジェクト数
+  1991
+ *USERオブジェクト数
+  711
+ *開いているファイル
+  0 editors, 0 files, 0 KB
+
+--- ビルド・ツール・プラグイン情報 ---
+RH850ビルド・ツールCC-RH用プラグイン
+ *バージョン
+  V8.14.00.01 [10 Apr 2025]
+ *アセンブリ・バージョン
+  1.1.10.12
+ *DLL ファイル名
+  BuildToolCCRH.dll
+RL78ビルド・ツールCC-RL用プラグイン
+ *バージョン
+  V8.14.00.01 [10 Apr 2025]
+ *アセンブリ・バージョン
+  1.0.0.0
+ *DLL ファイル名
+  BuildToolCCRL.dll
+RXビルド・ツールCC-RX用プラグイン
+ *バージョン
+  V8.14.00.01 [10 Apr 2025]
+ *アセンブリ・バージョン
+  3.12.10.1
+ *DLL ファイル名
+  BuildToolCCRX.dll
+RH850ビルド・ツールGHS CCRH850用プラグイン
+ *バージョン
+  V1.11.00.01 [18 Apr 2025]
+ *アセンブリ・バージョン
+  1.0.0.0
+ *DLL ファイル名
+  BuildToolGHSCCRH850.dll
+
+--- デバッグ・ツール・プラグイン情報 ---
+デバッガ・コレクション・プラグイン
+ *バージョン
+  V8.14.00.02 [08 May 2025]
+ *アセンブリ・バージョン
+  2.12.10.1
+ *DLL ファイル名
+  DebugToolCollection.dll
+
+--- その他のプラグイン情報 ---
+コード生成プラグイン
+ *バージョン
+  V4.08.06.01 [28 Oct 2022]
+ *アセンブリ・バージョン
+  3.0.0.0
+ *DLL ファイル名
+  CodePart.dll
+コード生成／端子図プラグイン
+ *バージョン
+  V2.10.07.02 [08 Nov 2021]
+ *アセンブリ・バージョン
+  1.0.0.0
+ *DLL ファイル名
+  CodePart2.dll
+デバッグ・コンソール・プラグイン
+ *バージョン
+  V8.09.00.03 [24 Nov 2022]
+ *アセンブリ・バージョン
+  8.9.0.0
+ *DLL ファイル名
+  DebugConsole.dll
+Quick and Effective tool solution - QE
+ *バージョン
+  V9.14.00.02 [08 Apr 2025]
+ *アセンブリ・バージョン
+  1.15.10.16
+ *DLL ファイル名
+  InCarTools.dll
+端子配置プラグイン
+ *バージョン
+  V1.54.01.01 [31 Jul 2014]
+ *アセンブリ・バージョン
+  1.6.10.23
+ *DLL ファイル名
+  PinConfig.dll
+プログラム解析プラグイン(!)
+ *バージョン
+  V4.13.00.03 [24 May 2023]
+ *アセンブリ・バージョン
+  3.12.11.9
+ *DLL ファイル名
+  ProgramAnalyzer.dll
+IronPythonコンソール・プラグイン
+ *バージョン
+  V1.49.00.02 [08 Nov 2024]
+ *アセンブリ・バージョン
+  1.6.10.23
+ *DLL ファイル名
+  PythonConsole.dll
+エディタ・パネル
+ *バージョン
+  V1.21.00.01 [09 Apr 2025]
+ *アセンブリ・バージョン
+  1.1.0.0
+ *DLL ファイル名
+  SEditor.dll
+スタック見積もりツール
+ *バージョン
+  V1.05.00.02 [30 Jul 2014]
+ *アセンブリ・バージョン
+  1.30.11.15
+ *DLL ファイル名
+  Stk.dll
+アップデート・マネージャ・プラグイン
+ *バージョン
+  V2.05.00.04 [30 May 2025]
+ *アセンブリ・バージョン
+  1.25.4.17
+ *DLL ファイル名
+  Update.dll
+
+デバッグ・ツール共通インタフェース
+ *バージョン
+  V8.14.00.02 [08 May 2025]
+ *アセンブリ・バージョン
+  3.12.10.1
+ *DLL ファイル名
+  CommonDebuggerInterface.dll
+デバイス情報共通インタフェース
+ *バージョン
+  V9.14.00.02 [08 Apr 2025]
+ *アセンブリ・バージョン
+  3.0.0.0
+ *DLL ファイル名
+  DeviceInformation.dll
+
+--- メイン・プロジェクト情報 ---
+D:\RX220Mouse2\RX220Mouse2.mtpj
+マイクロコントローラ情報
+ *R5F52206BxFM
+  *ファイル名: バージョン
+   RX_Productlist.xml: V3.180000
+   R5F52206BxFM_common.xml: V3.18.00
+   -: -
+   -: -
+   RX220.ddi: 1.10A
+  
+
+ビルド・ツール情報
+ *CC-RX
+   * プラグイン(*.dll)のバージョン
+     V8.14.00.05 [07 May 2025]
+   * コンパイラ・パッケージのバージョン
+     V3.07.00
+  
+
+デバッグ・ツール情報
+ *RX シミュレータ
+  Debugger Library V8.14.00.02 [08 May 2025]
+  
+
+その他のツール情報
+ *なし
+
+ *なし
+
+ *なし
+
+ *なし
+
+
