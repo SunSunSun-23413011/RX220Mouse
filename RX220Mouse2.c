@@ -91,7 +91,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     8    // 動作モード数
+#define   ModeMax     9    // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 // センサ関連
@@ -188,6 +188,7 @@ void mode4( int x );
 void mode5( int x );
 void mode6( int x );
 void mode7( int x );
+void mode8( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
@@ -202,7 +203,6 @@ int search_adachi( void );
 static void restore_maze_from_flash( void );
 static void persist_maze_to_flash( void );
 //---------------------------------------------------------------
-  restore_maze_from_flash();
 //  メインプログラム
 //---------------------------------------------------------------
 void main(void)
@@ -228,6 +228,7 @@ void main(void)
   LCD_dec_out(12, Batt    , 1);    // 残った小数値を表示
   pause( 2000 );
   clear_map();                     // MAPデータ初期化
+  restore_maze_from_flash();       // 可能ならフラッシュから復元
   load_param();                    // 各種パラメータを読み込み
   change_mode( 0 );                // まず初期画面にする = Mode0
   // メインループ
@@ -626,6 +627,7 @@ void change_mode( int x )
   else if( MODE == 5 ) mode5( DISP );   // Mode5:
   else if( MODE == 6 ) mode6( DISP );   // Mode6:
   else if( MODE == 7 ) mode7( DISP );   // Mode7:
+  else if( MODE == 8 ) mode8( DISP );   // Mode8:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -640,6 +642,7 @@ void exec_mode( void )
   else if( MODE == 5 ) mode5( EXEC );   // Mode5:
   else if( MODE == 6 ) mode6( EXEC );   // Mode6:
   else if( MODE == 7 ) mode7( EXEC );   // Mode7:
+  else if( MODE == 8 ) mode8( EXEC );   // Mode8:
 }
 //-------------------------------------------------------------------------
 //  Mode0 : センサチェック
@@ -799,8 +802,36 @@ static void select_gspeed( const char *title )
     }
   }
 }
-  persist_maze_to_flash();
-  persist_maze_to_flash();
+static void restore_maze_from_flash( void )
+{
+  maze_storage_snapshot_t snapshot;
+
+  if( maze_storage_load( &snapshot ) )
+  {
+    memcpy( map, snapshot.map, sizeof( map ) );
+    pos_x = snapshot.pos_x;
+    pos_y = snapshot.pos_y;
+    head  = snapshot.head & 0x03;
+  }
+  else
+  {
+    pos_x = 0;
+    pos_y = 0;
+    head  = 0;
+  }
+}
+
+static void persist_maze_to_flash( void )
+{
+  maze_storage_snapshot_t snapshot;
+
+  snapshot.pos_x = pos_x;
+  snapshot.pos_y = pos_y;
+  snapshot.head  = head;
+  snapshot.reserved = 0;
+  memcpy( snapshot.map, map, sizeof( snapshot.map ) );
+  maze_storage_save( &snapshot );
+}
 //  Mode5 : 探索走行 
 //-------------------------------------------------------------------------
 void mode5( int x )
@@ -819,6 +850,7 @@ void mode5( int x )
   // 往復探索
   mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );  // 行きの探索
   mouse_search( 0, 0, GSPEEDvar, S_MODE );            // 帰りの探索
+  persist_maze_to_flash();
 }
 //-------------------------------------------------------------------------
 //  Mode6 : 二次走行
@@ -837,7 +869,8 @@ void mode6( int x )
   // 二次走行
   select_gspeed( "6:Try   " );
   pos_x = 0; pos_y = 0; head = 0;
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );	// 二次走行
+  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );      // 二次走行
+  persist_maze_to_flash();
 }
 //-------------------------------------------------------------------------
 // Mode7 :探索走行 帰りの探索無し 
@@ -857,6 +890,50 @@ void mode7( int x )
   pos_x = 0; pos_y = 0; head = 0;
   // 探索
   mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );  // 行きの探索
+  persist_maze_to_flash();
+}
+
+//-------------------------------------------------------------------------
+//  Mode8 : 迷路情報クリア
+//-------------------------------------------------------------------------
+void mode8( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "8:ClrMaze" );
+    LCD_print( 8, "Exec=OK" );
+    return;
+  }
+
+  LCD_print( 0, "Clr maze?" );
+  LCD_print( 8, "UP=No EX=Yes" );
+
+  while( 1 )
+  {
+    if( SW_EXEC == SW_ON )
+    {
+      WaitKeyOff();
+      clear_map();
+      pos_x = 0;
+      pos_y = 0;
+      head  = 0;
+      maze_storage_clear();
+      persist_maze_to_flash();
+      LCD_print( 0, "Maze Cleared" );
+      LCD_print( 8, "        " );
+      beep( 3, 150 );
+      pause( 1500 );
+      return;
+    }
+    else if( ( SW_UP == SW_ON ) || ( SW_DOWN == SW_ON ) )
+    {
+      WaitKeyOff();
+      LCD_print( 0, "Canceled" );
+      LCD_print( 8, "        " );
+      pause( 1000 );
+      return;
+    }
+  }
 }
 //-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
@@ -1063,28 +1140,6 @@ void clear_map( void )
   for( y = 0 ; y < 16 ; y++ )
     for( x = 0 ; x < 16 ; x++ )
       map[ x ][ y ] = 0x00;
-static void restore_maze_from_flash( void )
-{
-  maze_storage_snapshot_t snapshot;
-  if( maze_storage_load( &snapshot ) )
-  {
-    memcpy( map, snapshot.map, sizeof( map ) );
-    pos_x = snapshot.pos_x;
-    pos_y = snapshot.pos_y;
-    head  = snapshot.head & 0x03;
-  }
-}
-
-static void persist_maze_to_flash( void )
-{
-  maze_storage_snapshot_t snapshot;
-  snapshot.pos_x = pos_x;
-  snapshot.pos_y = pos_y;
-  snapshot.head  = head;
-  snapshot.reserved = 0;
-  memcpy( snapshot.map, map, sizeof( snapshot.map ) );
-  maze_storage_save( &snapshot );
-}
 
   // 西側の外壁（x=0，y=0～15）を上書き
   for( y = 0 ; y < 16 ; y++ )
