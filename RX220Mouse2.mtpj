@@ -87,6 +87,20 @@
       <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
       <ParentItem>49b74a54-73e7-4b19-b5a7-7c5b41b8ba40</ParentItem>
     </Instance>
+    <Instance Guid="6f8dfc1d-61c7-4de1-9a9f-9aafd62fdd13">
+      <Name>maze_storage.c</Name>
+      <Type>File</Type>
+      <RelativePath>maze_storage.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>49b74a54-73e7-4b19-b5a7-7c5b41b8ba40</ParentItem>
+    </Instance>
+    <Instance Guid="0edc3dbe-4c07-4d4c-9d78-2f097afe9d84">
+      <Name>maze_storage.h</Name>
+      <Type>File</Type>
+      <RelativePath>maze_storage.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>49b74a54-73e7-4b19-b5a7-7c5b41b8ba40</ParentItem>
+    </Instance>
   </Class>
   <Class Guid="fb98844b-2c27-4275-9804-f6e63e204da0">
     <Instance Guid="fb98844b-2c27-4275-9804-f6e63e204da0">
@@ -139,7 +153,9 @@
       <SourceItemType4>CSource</SourceItemType4>
       <SourceItemGuid5>0196cef5-f56c-4717-878e-cf7fa6475332</SourceItemGuid5>
       <SourceItemType5>CSource</SourceItemType5>
-      <SourceItemCount>6</SourceItemCount>
+      <SourceItemGuid6>6f8dfc1d-61c7-4de1-9a9f-9aafd62fdd13</SourceItemGuid6>
+      <SourceItemType6>CSource</SourceItemType6>
+      <SourceItemCount>7</SourceItemCount>
       <LastDeviceChangedCounter>0</LastDeviceChangedCounter>
     </Instance>
     <Instance Guid="9e208646-ccba-4100-a676-29b1efe6545f">
