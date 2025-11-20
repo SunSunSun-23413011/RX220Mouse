@@ -104,9 +104,15 @@ void abort(void);
 #define   GOAL_Y      8    // ゴール y座標  3 
 #define   S_MODE      0    // Search Mode : 未探索区間は壁無しとして扱う
 #define   T_MODE      1    // Try Mode    : 未探索区間は壁有りとして扱う
-static const short GSSPEED[] = { 300, 400, 500, 600, 700 };  // preset target speeds
+static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // preset target speeds
 #define   GSPEED_LEVELS        ((int)(sizeof(GSSPEED) / sizeof(GSSPEED[0])))
 #define   GSPEED_DEFAULT_INDEX (GSPEED_LEVELS - 1)
+// データフラッシュ関連 1/30 31 2/1
+#define CLOCK            20     // クロックソースの選択 に合わせること [MHz]
+#define FDATA_A			(0x0100000)	//データフラッシュの先頭
+#define SDATA_BK	0	//センサーデータ保存用ブロック(0~1)
+#define MDATA_BK1	2	//データフラッシュマップ保存用ブロック1(2~3)
+#define MDATA_BK2	4	//データフラッシュマップ保存用ブロック2(4~5)
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -196,6 +202,17 @@ void clear_map( void );
 void make_map_data( void );
 void make_potential( int gx, int gy, int mode );
 int search_adachi( void );
+void map_writeDF(short);	// MAPデータをDataFlashへ書込み   
+void map_DFread(short);	// MAPデータをDataFlashから読出し   
+void fcu_reset(void);		// FCUをリセット 
+void fcu_tope(void) ;		//  FCUをP/Eモードにする  
+void fcu_toread(void);		//  FCUを読み込みモードにする  
+void error_check(void);	//  エラーを確認し、エラーがあれば修正する  
+void clear_flash(unsigned short);	//  ブロック消去  
+void wait_frdy(int);		//  FCU処理待ち  
+void DFlash_init(void);		//  データフラッシュ初期化 (周辺クロックをFCUに通知する関数)   
+void DFlash_bread(unsigned short ,unsigned short *);	// DataFlashメモリ1ブロック(128byte)読出し  
+void DFlash_bprog(unsigned short ,unsigned short *);	// DataFlashメモリ1ブロック(128byte)書込み  
 //---------------------------------------------------------------
 //  メインプログラム
 //---------------------------------------------------------------
@@ -372,6 +389,8 @@ void IO_init( void )
   R_SW = LED_ON;             // 右センサON
   L_SW = LED_ON;             // 左センサON
   F_SW = LED_ON;             // 前センサON
+    // ===== DataFlashの初期化 =====
+  DFlash_init();
 }
 //---------------------------------------------------------------
 //  パラメータ読み込み
@@ -810,7 +829,9 @@ void mode5( int x )
   pos_x = 0; pos_y = 0; head = 0;
   // 往復探索
   mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );  // 行きの探索
+  map_writeDF(MDATA_BK1);	// MAPデータをDataFlashへ書込み  
   mouse_search( 0, 0, GSPEEDvar, S_MODE );            // 帰りの探索
+  map_writeDF(MDATA_BK1);	// MAPデータをDataFlashへ書込み  
 }
 //-------------------------------------------------------------------------
 //  Mode6 : 二次走行
@@ -828,6 +849,7 @@ void mode6( int x )
   // 実行モードの場合
   // 二次走行
   select_gspeed( "6:Try   " );
+  map_DFread(MDATA_BK1);	//MAPデータをDataFlashから戻す
   pos_x = 0; pos_y = 0; head = 0;
   mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );	// 二次走行
 }
@@ -1026,6 +1048,235 @@ void finish( void )
   beep( 0 , 50 );
   beep( 13 , 500);
 }
+//-------------------------------------------------------------------------
+// MAPデータをDataFlashへ書込み   
+// MAPデータの見方:map[ pos_x ][ pos_y ] 何個目のMAPにするか:no
+//-------------------------------------------------------------------------
+void map_writeDF(short no)
+{
+  int i, x, y;
+  unsigned short sdata[128];		// map保存用
+  
+	// mapから保存用sdataにデータを移動
+  i = 0;
+  for(x = 0; x < 16; x++){
+    for(y = 0; y < 16; y+=2){
+      sdata[i] = ((map[x][y] << 8)&0xff00) | (map[x][y+1]&0x00ff);	// mapデータの移動
+      i++;
+    }
+  }
+	// mapデータ保存 128byteづつ 2byte(short)x64
+  DFlash_bprog(no, &sdata[0]);
+  DFlash_bprog(no+1, &sdata[64]);
+}
+
+//-------------------------------------------------------------------------
+// MAPデータをDataFlashから読出し   2/1
+// MAPデータの見方:map[ pos_x ][ pos_y ] 何個目のMAPか:no
+//-------------------------------------------------------------------------
+void map_DFread(short no)
+{
+  int i, x, y;
+  unsigned short sdata[128];		// map保存用
+
+	// mapデータを読出し
+  DFlash_bread(no ,&sdata[0]) ;
+  DFlash_bread(no+1 ,&sdata[64]);
+
+	// 読みだしたデータをmapへ戻す
+  i = 0;
+  for(x = 0; x < 16; x++){
+    for(y = 0; y < 16; y+=2){
+      map[x][y]   = (sdata[i] >> 8)&0x00ff;
+      map[x][y+1] = (sdata[i])&0x00ff;
+      i++;
+    }
+  }
+
+}
+
+//-------------------------------------------------------------------------
+//  FCUをリセット  1/30
+//-------------------------------------------------------------------------
+void fcu_reset(void) 
+{
+  FLASH.FRESETR.BIT.FRESET = 1;
+  pause( 2 );		// 2mS wait
+  FLASH.FRESETR.BIT.FRESET = 0;
+}
+
+//-------------------------------------------------------------------------
+//  FCUをP/Eモードにする  1/31
+//-------------------------------------------------------------------------
+void fcu_tope(void) 
+{
+  if((FLASH.FENTRYR.WORD & 0x00ff) != 0x0080){	//フラッシュP/E モードエントリレジスタ
+    FLASH.FENTRYR.WORD = 0xAA80;	//キーコードはAAh  P/Eモードに
+  }
+  error_check();
+	//書き込みプロテクト解除
+  FLASH.FWEPROR.BYTE = 0x01;	//フラッシュライトイレーズプロテクトレジスタ 01：プログラム/イレーズ可能
+}
+
+//-------------------------------------------------------------------------
+//  FCUを読み込みモードにする  1/31
+//-------------------------------------------------------------------------
+void fcu_toread(void) 
+{
+  FLASH.FENTRYR.WORD = 0xAA00;		//キーコードはAAh  リードモードに
+
+  while(FLASH.FENTRYR.WORD & 0x00ff != 0x0000){
+    FLASH.FWEPROR.BYTE = 0x02;	// 10：プログラム/イレーズ不可能
+  }
+}
+
+//-------------------------------------------------------------------------
+//  エラーを確認し、エラーがあれば修正する  1/31
+//-------------------------------------------------------------------------
+void error_check(void) 
+{
+  int iserr = 0;
+  unsigned char *addr_b;
+  addr_b = (unsigned char *)(FDATA_A);	//データフラッシュの先頭+消去ブロックアドレス
+
+  iserr |= FLASH.FSTATR0.BIT.ILGLERR;	//FCUは不正なコマンドや不正やE2データフラッシュアクセスを検出
+  iserr |= FLASH.FSTATR0.BIT.ERSERR;	//イレース中にエラー発生
+  iserr |= FLASH.FSTATR0.BIT.PRGERR;	//プログラム中にエラー発生
+  if(iserr == 0)
+  {
+    return;		//no error
+  }
+
+  if(FLASH.FSTATR0.BIT.ILGLERR == 1){
+    if(FLASH.FASTAT.BYTE != 0x10){
+      FLASH.FASTAT.BYTE = 0x10;	//フラグをクリア
+    }
+  }
+	//ステータスクリアコマンド発行
+  *addr_b = 0x50;
+}
+
+//-------------------------------------------------------------------------
+//  ブロック消去 1ブロック 128byte      1/31
+//-------------------------------------------------------------------------
+void clear_flash(unsigned short block) 
+{
+	unsigned char *addr_b;
+  addr_b = (unsigned char *)(FDATA_A+block*0x80);	//データフラッシュの先頭+消去ブロックアドレス
+
+  fcu_tope(); 
+	//ブロック単位の書き込み許可
+  FLASH.DFLWE0.WORD = 0x1EFF;		//キーコードは1Eh
+
+  //ブロック消去コマンド発行
+  *addr_b = 0x20;
+  *addr_b = 0xD0;
+
+  wait_frdy(5);		// 5ms待ちはPicoプログラムから
+  error_check();
+  fcu_toread();
+}
+
+//-------------------------------------------------------------------------
+//  FCU処理待ち  1/31
+//-------------------------------------------------------------------------
+void wait_frdy(int t) 
+{
+  int cn=0;
+  while(FLASH.FSTATR0.BIT.FRDY==0){
+    pause( 1 );		// 1mS wait
+    cn++;
+    if(cn==t){	//タイムアウトだったらリセット
+      fcu_reset();
+    }
+  }
+  return;
+}
+
+//-------------------------------------------------------------------------
+//  データフラッシュ初期化 (周辺クロックをFCUに通知する関数)   1/31
+//-------------------------------------------------------------------------
+void DFlash_init(void)
+{
+  short i;
+  volatile unsigned char *addr_b = (unsigned char *)FDATA_A;
+  volatile unsigned short *addr_w = (unsigned short *)FDATA_A;
+
+      fcu_reset();
+  //クロック通知
+  fcu_tope();		// FCUをP/Eモードにする
+  //周辺クロックを設定
+  FLASH.PCKAR.BIT.PCKA = CLOCK;
+
+  for(i=0;i<64;i++){	//ブロック数の分だけループ
+		//周辺クロック通知コマンド発行
+    *addr_b = 0xE9;
+    *addr_b = 0x03;
+    *addr_w = 0x0F0F;
+    *addr_w = 0x0F0F;
+    *addr_w = 0x0F0F;
+    *addr_b = 0xD0;
+    wait_frdy(2);		// 2ms待ちはPicoプログラムから
+    fcu_reset();
+    error_check();
+    addr_b += 0x80;	//0x80：1BLOCKのサイズ
+    addr_w += 0x80;	//0x80：1BLOCKのサイズ
+  }
+
+	//データフラッシュ読み出し許可
+  FLASH.DFLRE0.WORD = 0x2DFF;		//キーコードは2Dh
+  fcu_toread();		// 読み込みモードに
+}
+
+//-------------------------------------------------------------------------
+//  データフラッシュメモリ1ブロック(128byte)読出し  1/31 2/1
+//  読出しブロック先頭:block 読出しデータ:data
+//-------------------------------------------------------------------------
+void DFlash_bread(unsigned short block,unsigned short *data) 
+{
+  short i;
+  unsigned short *addr_w;
+  addr_w = (unsigned short *)(FDATA_A+block*0x80);	//データフラッシュの先頭+読出しブロックアドレス
+													//0x80：1BLOCKのサイズ
+	//データフラッシュ読み出し許可
+  FLASH.DFLRE0.WORD = 0x2DFF;		//キーコードは2Dh
+  fcu_toread();		// 読み込みモードに
+	//マップデータをRAMにコピー
+  for(i=0;i<64;i++){
+    *data = *addr_w; 		// データ読出し
+    addr_w++;
+    data++;
+  }
+}
+
+//-------------------------------------------------------------------------
+//  データフラッシュメモリ1ブロック(128byte)書込み  
+//  書込みブロック先頭:block 書込みデータ:data
+//-------------------------------------------------------------------------
+void DFlash_bprog(unsigned short block,unsigned short *data)
+{
+  short i;
+  unsigned char *addr_b;
+  unsigned short *addr_w;
+  addr_b = (unsigned char *)(FDATA_A+block*0x80);	//データフラッシュの先頭+書込みブロックアドレス
+  addr_w = (unsigned short *)(FDATA_A+block*0x80);	//0x80：1BLOCKのサイズ
+
+	//DataFlashイレース
+  clear_flash (block);
+  fcu_tope(); 
+	//DataFlashに書込み(プログラムコマンド発行)
+  for(i=0;i<64;i++){
+    *addr_b = 0xE8;
+    *addr_b = 0x01;
+    *addr_w = *data++;  	// 書込みデータ
+    *addr_b = 0xD0;
+    wait_frdy(3);		// 3ms待ちはPicoプログラムから
+    error_check();
+    addr_w++;		// これが抜けていた 2/1
+  }
+  fcu_toread();
+}
+
 //-------------------------------------------------------------------------
 //  壁のセンシング
 //-------------------------------------------------------------------------
