@@ -1,12 +1,12 @@
 品質記録情報
-2025年11月19日 21:35:38
+2025年11月20日 16:07:07
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(1729):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(778):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 55 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 55 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 54 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
+W0561016:The evaluation version of CC-RX V3 is valid for the remaining 54 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 Renesas Optimizing Linker Completed
 ------ ビルド終了(エラー:0個, 警告:3個)(RX220Mouse2, DefaultBuild) ------
 
@@ -35,7 +35,7 @@ DefaultBuild\RX220Mouse2.clnk :
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 38b72fd1a9f55b090f2d4fa080a66c517241bf4e
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: e259d288af3d7d2716b571185b4bd5948661b0ef
 D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7d02be8da98785b20aeb32c3d223ac191bb8cddb
 
 
@@ -64,7 +64,7 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 7d02be8da98785b20aeb32c3d223ac191bb
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  102 MB
+  101 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
