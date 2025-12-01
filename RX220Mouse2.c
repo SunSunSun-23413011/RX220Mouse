@@ -50,7 +50,8 @@
 //#include "typedefine.h"
 #include "iodefine.h"
 #include "LCDrx220.h"			// LCDﾗｲﾌﾞﾗﾘ
-#include "160926AccTable.h"   // モータ速度用ヘッダ
+#include "160926AccTable.h"
+#include <math.h>
 #ifdef __cplusplus
 //#include <ios>                        // Remove the comment when you use ios
 //_SINT ios_base::Init::init_cnt;       // Remove the comment when you use ios
@@ -208,6 +209,79 @@ static const unsigned short beep_data[BEEP_TONE_COUNT] = {
   78,  // B6 1975.533 Hz
   74   // C7 2093.005 Hz
 };
+
+// Melody data is expressed as MIDI note numbers and duration in milliseconds.
+// Replace this stub with the full converted score if a longer tune is required.
+typedef struct {
+  unsigned char midi;
+  unsigned short duration_ms;
+} melody_entry_t;
+
+static const melody_entry_t melody_data[] = {
+  { 69, 56 }, { 72, 56 }, { 76, 56 }, { 65, 107 }, { 60, 107 },
+  { 69, 56 }, { 72, 56 }, { 76, 56 }, { 67, 56 }, { 70, 56 },
+  { 74, 56 }, { 65, 107 }, { 67, 56 }, { 70, 56 }, { 74, 56 },
+  { 67, 56 }, { 70, 56 }, { 74, 56 }, { 36, 1714 }, { 65, 56 }
+};
+
+#define MELODY_LENGTH (int)(sizeof(melody_data)/sizeof(melody_data[0]))
+
+volatile unsigned short melody_ms_remaining = 0;
+volatile unsigned short melody_index = 0;
+volatile unsigned char melody_playing = 0;
+
+static unsigned short midi_to_tgr_count( int midi )
+{
+  if( midi <= 0 ) return 0;
+  double freq = 440.0 * pow( 2.0, ((double)midi - 69.0) / 12.0 );
+  double cnt  = (312500.0 / ( 2.0 * freq )) - 1.0;
+  if( cnt < 0.0 )      cnt = 0.0;
+  if( cnt > 65535.0 )  cnt = 65535.0;
+  return (unsigned short)( cnt + 0.5 );
+}
+
+void beep_midi_start( int midi )
+{
+  if( midi <= 0 ){
+    MTU.TSTR.BIT.CST0 = 0;
+    return;
+  }
+  BUZZER_TGR = midi_to_tgr_count( midi );
+  MTU.TSTR.BIT.CST0 = 1;
+}
+
+void melody_start( void )
+{
+  melody_index = 0;
+  melody_ms_remaining = 0;
+  melody_playing = 1;
+}
+
+void melody_stop( void )
+{
+  melody_playing = 0;
+  MTU.TSTR.BIT.CST0 = 0;
+}
+
+void melody_tick_1ms( void )
+{
+  if( !melody_playing || MELODY_LENGTH == 0 )  return;
+
+  if( melody_ms_remaining > 0 ){
+    melody_ms_remaining--;
+    return;
+  }
+
+  if( melody_index >= MELODY_LENGTH ){
+    melody_stop();
+    return;
+  }
+
+  beep_midi_start( melody_data[ melody_index ].midi );
+  melody_ms_remaining = melody_data[ melody_index ].duration_ms;
+  melody_index++;
+}
+
 // センサの事前値格納用
 vushort  R_PRE;           // 右センサの値
 vushort  L_PRE;           // 左センサの値
@@ -270,6 +344,10 @@ void int_mot_r(void);		//RX
 void int_mot_l(void); 		//RX
 void WaitKeyOff( void );
 void beep(unsigned char tone,int value);
+void beep_midi_start( int midi );
+void melody_tick_1ms( void );
+void melody_start( void );
+void melody_stop( void );
 void change_mode( int x );
 void exec_mode( void );
 void modeB1( int x );
@@ -627,6 +705,7 @@ void timerc_200us( void )
     {
       case 0:  // 1msecタイマー&LCDの更新
                wait_timer++;     // wait関数用カウンタ
+               melody_tick_1ms();
                LCD();            // LCD更新処理
                break;
       case 1:  // 右センサ消灯時の測定 AN0
@@ -1043,6 +1122,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
   short motion;
   reset_wall_samples();
   countdown();                  // カウントダウン
+  melody_start();              // start search BGM
   while( 1 ){
     // １つのループは区間中心から次の区間中心まで
     // 最初に半区画直進
@@ -1107,6 +1187,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
                 while( STEP < GO_STEP );  // 残りステップ数で減速 //
                 com_turn( 2 );            // 反転
                 com_stop();               // 停止
+                melody_stop();               // stop melody before finish
                 head_change = 2;          // 進行方向更新変数を後に設定
                 head = ( head + head_change ) & 0x03; // 詳細は下を参照
                 finish();                 // ゴール音
@@ -1114,6 +1195,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
                 break;
       // その他
       default : com_stop();               // 停止
+                melody_stop();               // stop melody before exit
                 head_change = 0;          // 進行方向更新変数を前に設定
                 head = ( head + head_change ) & 0x03; // 詳細は下を参照
                 return;                   // ループ終了
