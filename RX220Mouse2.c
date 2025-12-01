@@ -123,8 +123,91 @@ ushort   SENSOR_PT;        // 割り込み回数カウント用ポインタ
 int      MODE = 0;         // 現在モード格納用
 vshort   Batt;             // 電池の電圧
 //ブザー関連 : 休符,ド,ド#,レ,レ#,ミ,ファ,ファ#,ソ,ソ#,ラ,ラ#,シ,ド
-unsigned short beep_data[14]
-   = { 0, 298, 282, 266, 252, 236, 224, 212, 200, 188, 178, 168, 158, 150 };  //20MHz/64の為値2倍に 
+enum beep_tone {
+  BEEP_MUTE = 0,
+  BEEP_C4,
+  BEEP_CS4,
+  BEEP_D4,
+  BEEP_DS4,
+  BEEP_E4,
+  BEEP_F4,
+  BEEP_FS4,
+  BEEP_G4,
+  BEEP_GS4,
+  BEEP_A4,
+  BEEP_AS4,
+  BEEP_B4,
+  BEEP_C5,
+  BEEP_CS5,
+  BEEP_D5,
+  BEEP_DS5,
+  BEEP_E5,
+  BEEP_F5,
+  BEEP_FS5,
+  BEEP_G5,
+  BEEP_GS5,
+  BEEP_A5,
+  BEEP_AS5,
+  BEEP_B5,
+  BEEP_C6,
+  BEEP_CS6,
+  BEEP_D6,
+  BEEP_DS6,
+  BEEP_E6,
+  BEEP_F6,
+  BEEP_FS6,
+  BEEP_G6,
+  BEEP_GS6,
+  BEEP_A6,
+  BEEP_AS6,
+  BEEP_B6,
+  BEEP_C7,
+  BEEP_TONE_COUNT
+};
+
+// MTU0 is driven from PCLK/64 (20MHz/64 = 312.5kHz). With toggle output on TGRB,
+// the count is round((312500 / (2 * target_freq_hz)) - 1). Frequencies reference:
+// https://inalesson.com/frequency_list/2417/
+static const unsigned short beep_data[BEEP_TONE_COUNT] = {
+  0,   // mute
+  596, // C4 261.626 Hz
+  563, // C#4 277.183 Hz
+  531, // D4 293.665 Hz
+  501, // D#4 311.127 Hz
+  473, // E4 329.628 Hz
+  446, // F4 349.228 Hz
+  421, // F#4 369.994 Hz
+  398, // G4 391.995 Hz
+  375, // G#4 415.305 Hz
+  354, // A4 440.000 Hz
+  334, // A#4 466.164 Hz
+  315, // B4 493.883 Hz
+  298, // C5 523.251 Hz
+  281, // C#5 554.365 Hz
+  265, // D5 587.330 Hz
+  250, // D#5 622.254 Hz
+  236, // E5 659.255 Hz
+  223, // F5 698.456 Hz
+  210, // F#5 739.989 Hz
+  198, // G5 783.991 Hz
+  187, // G#5 830.609 Hz
+  177, // A5 880.000 Hz
+  167, // A#5 932.328 Hz
+  157, // B5 987.767 Hz
+  148, // C6 1046.502 Hz
+  140, // C#6 1108.731 Hz
+  132, // D6 1174.659 Hz
+  125, // D#6 1244.508 Hz
+  118, // E6 1318.510 Hz
+  111, // F6 1396.913 Hz
+  105, // F#6 1479.978 Hz
+  99,  // G6 1567.982 Hz
+  93,  // G#6 1661.219 Hz
+  88,  // A6 1760.000 Hz
+  83,  // A#6 1864.655 Hz
+  78,  // B6 1975.533 Hz
+  74   // C7 2093.005 Hz
+};
 // センサの事前値格納用
 vushort  R_PRE;           // 右センサの値
 vushort  L_PRE;           // 左センサの値
@@ -234,10 +317,10 @@ void main(void)
   LED = LED_OFF;                        // LEDを消灯
   MOTOR_EN =0;  // モータOFF
   // 起動音
-  beep( 1, 150 );
-  beep( 8, 150 );
-  beep( 1, 150 );
-  beep( 8, 150 );
+  beep( BEEP_C5, 150 );
+  beep( BEEP_G5, 150 );
+  beep( BEEP_C5, 150 );
+  beep( BEEP_G5, 150 );
   // タイトル表示
   LCD_print( 0, "LE-S200P" );
   // 電圧表示
@@ -260,7 +343,7 @@ void main(void)
       WaitKeyOff();                // チャタリング防止処理
       change_mode(-1);             // モード-1
     }else if( SW_EXEC == SW_ON ){  // 実行SWが押されている場合
-      beep( 3, 150 );              // 実行音 : ド
+      beep( BEEP_D5, 150 );              // 実行音 : ド
       WaitKeyOff();                // チャタリング防止処理
       exec_mode();                 // モード実行
       MODE = 0;
@@ -667,11 +750,20 @@ void WaitKeyOff( void )
 //------------------------------------------------------------------------
 void beep(unsigned char tone,int value)
 {
-  BUZZER_TGR = beep_data[ tone ];  // 音程の設定 20MHz/64 ように値を2倍に修正 7/22
-  MTU.TSTR.BIT.CST0 = 1;			//Beep動作開始 タイマスタート SP 7/20
-  pause( value );                         // Beep音の長さ
-  MTU.TSTR.BIT.CST0 = 0;			//Beep動作停止 タイマストップ SP 7/20
+  if( tone >= BEEP_TONE_COUNT )  return;
+
+  if( tone == BEEP_MUTE ){
+    MTU.TSTR.BIT.CST0 = 0;         // no tone
+    pause( value );
+    return;
+  }
+
+  BUZZER_TGR = beep_data[ tone ];  // set frequency
+  MTU.TSTR.BIT.CST0 = 1;           // start Beep timer
+  pause( value );                  // Beep duration
+  MTU.TSTR.BIT.CST0 = 0;           // stop Beep timer
 }
+
 //-------------------------------------------------------------------------
 //  モード表示
 //-------------------------------------------------------------------------
@@ -1095,19 +1187,19 @@ void com_turn( int t_mode )
 //-------------------------------------------------------------------------
 void countdown( void )
 {
-  beep( 0, 850 );
-  beep( 1, 150 );
-  beep( 0, 850 );
+  beep( BEEP_MUTE, 850 );
+  beep( BEEP_C5, 150 );
+  beep( BEEP_MUTE, 850 );
   
   R_SW = LED_OFF;        // 右センサOFF
   L_SW = LED_OFF;        // 左センサOFF
   F_SW = LED_OFF;        // 前センサOFF
-  beep( 1, 150 );
-  beep( 0, 850 );
+  beep( BEEP_C5, 150 );
+  beep( BEEP_MUTE, 850 );
   R_SW = LED_ON;         // 右センサON
   L_SW = LED_ON;         // 左センサON
   F_SW = LED_ON;         // 前センサON
-  beep( 13, 1000 );
+  beep( BEEP_C6, 1000 );
 }
 //-------------------------------------------------------------------------
 //  ゴール音 
@@ -1115,11 +1207,11 @@ void countdown( void )
 void finish( void )
 {
   update_wall_ref_from_log();
-  beep( 8 , 150 );
-  beep( 0 , 150 );
-  beep( 8 , 150 );
-  beep( 0 , 50 );
-  beep( 13 , 500);
+  beep( BEEP_G5, 150 );
+  beep( BEEP_MUTE, 150 );
+  beep( BEEP_G5, 150 );
+  beep( BEEP_MUTE, 50 );
+  beep( BEEP_C6, 500);
 }
 //-------------------------------------------------------------------------
 // MAPデータをDataFlashへ書込み   
