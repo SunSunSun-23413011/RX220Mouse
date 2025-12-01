@@ -631,7 +631,7 @@ void change_mode( int x )
 {
   MODE += x;                            // モード更新
   if( MODE >= ModeMax ) MODE = 0;       // モードが超えている場合は0に戻す
-  if( MODE < 0 )  MODE = ModeMax - 2;   // モードが負の場合はモードを最大値に設定
+  if( MODE < -1 )  MODE = ModeMax - 1;   // モードが負の場合はモードを最大値に設定
   if     ( MODE == -1) modeB1( DISP );
   else if( MODE == 0 ) mode0( DISP );   // Mode0:
   else if( MODE == 1 ) mode1( DISP );   // Mode1:
