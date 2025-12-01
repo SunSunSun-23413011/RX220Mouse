@@ -1,9 +1,9 @@
 品質記録情報
-2025年12月1日 17:37:07
+2025年12月1日 19:28:54
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(960):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1042):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 43 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 43 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
@@ -35,8 +35,8 @@ DefaultBuild\RX220Mouse2.clnk :
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: d38c05c0b3629ea0fe3b5b32eb868099980ced0b
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 5b1b7aa9dcda6a52b33e1dfd4d26fa1365313a3d
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 3b494149969eea41f797760dacbbf9024201304e
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 81575ce24138382feef7a72d8b03bd4bb081a646
 
 
 --- システム情報 ---
@@ -64,11 +64,11 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 5b1b7aa9dcda6a52b33e1dfd4d26fa13653
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  97 MB
+  99 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
-  712
+  711
  *開いているファイル
   0 editors, 0 files, 0 KB
 
