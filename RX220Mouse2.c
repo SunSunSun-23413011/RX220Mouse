@@ -210,6 +210,69 @@ static const unsigned short beep_data[BEEP_TONE_COUNT] = {
   74   // C7 2093.005 Hz
 };
 
+typedef struct {
+  unsigned char tone;
+  unsigned short duration_ms;
+} melody_step_t;
+
+static const melody_step_t ccnt_melody[] = {
+  { BEEP_D4, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_DS4, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_E4, 225 }, { BEEP_MUTE, 100 },
+  { BEEP_D4, 75 },  { BEEP_MUTE, 50  },
+  { BEEP_D4, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_E4, 75 },  { BEEP_MUTE, 50  },
+  { BEEP_F4, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_C5, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_D5, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_C5, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_D5, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_C5, 150 }, { BEEP_MUTE, 100 },
+  { BEEP_B4, 75 },  { BEEP_MUTE, 50  },
+  { BEEP_A4, 75 },  { BEEP_MUTE, 50  },
+  { BEEP_G4, 75 },  { BEEP_MUTE, 50  },
+  { BEEP_F4, 75 },  { BEEP_MUTE, 50  }
+};
+
+#define CCNT_MELODY_LENGTH ((ushort)(sizeof(ccnt_melody) / sizeof(ccnt_melody[0])))
+
+static volatile ushort ccnt_ms_left = 0;
+static volatile ushort ccnt_step_index = 0;
+static volatile uchar  ccnt_playing = 0;
+
+static inline void buzzer_set_tone(unsigned char tone)
+{
+  if( tone >= BEEP_TONE_COUNT || tone == BEEP_MUTE ){
+    MTU.TSTR.BIT.CST0 = 0;  // stop tone (mute or invalid)
+    return;
+  }
+
+  BUZZER_TGR = beep_data[ tone ];  // set frequency
+  MTU.TSTR.BIT.CST0 = 1;           // start Beep timer
+}
+
+static inline void ccnt_playback_tick(void)
+{
+  if( ccnt_playing == 0 )
+    return;
+
+  if( ccnt_ms_left > 0 ){
+    ccnt_ms_left--;
+    return;
+  }
+
+  if( ccnt_step_index >= CCNT_MELODY_LENGTH ){
+    buzzer_set_tone( BEEP_MUTE );
+    ccnt_playing = 0;
+    return;
+  }
+
+  buzzer_set_tone( ccnt_melody[ ccnt_step_index ].tone );
+  ccnt_ms_left = ccnt_melody[ ccnt_step_index ].duration_ms;
+  ccnt_step_index++;
+}
+
+
 
 // センサの事前値格納用
 vushort  R_PRE;           // 右センサの値
@@ -273,6 +336,7 @@ void int_mot_r(void);		//RX
 void int_mot_l(void); 		//RX
 void WaitKeyOff( void );
 void beep(unsigned char tone,int value);
+void ccnt( int x );
 void change_mode( int x );
 void exec_mode( void );
 void modeB1( int x );
@@ -630,6 +694,7 @@ void timerc_200us( void )
     {
       case 0:  // 1msecタイマー&LCDの更新
                wait_timer++;     // wait関数用カウンタ
+               ccnt_playback_tick();
                LCD();            // LCD更新処理
                break;
       case 1:  // 右センサ消灯時の測定 AN0
@@ -766,6 +831,24 @@ void beep(unsigned char tone,int value)
   pause( value );                  // Beep duration
   MTU.TSTR.BIT.CST0 = 0;           // stop Beep timer
 }
+//-------------------------------------------------------------------------
+//  ccnt melody (non-blocking playback)
+//-------------------------------------------------------------------------
+void ccnt( int x )
+{
+  if( x != 0 )  return;
+
+  ccnt_step_index = 0;
+  ccnt_ms_left = 0;
+  ccnt_playing = 1;
+  ccnt_playback_tick();  // start first note immediately
+
+  while( ccnt_playing ){
+    pause( 1 );
+  }
+}
+
+
 
 //-------------------------------------------------------------------------
 //  モード表示
@@ -982,43 +1065,46 @@ static void select_gspeed( const char *title )
 //-------------------------------------------------------------------------
 void mode5( int x )
 {
-  if( x == DISP )  // DISPモードの場合
+  if( x == DISP )
   {
-    // モード内容表示
     LCD_print( 0, "5:Search" );
     LCD_print( 8, "Spd " );
-    LCD_dec_out( 12, GSPEEDvar, 3 );   //現在の設定スピード
-    return;                     // 以下の実行処理をしないで戻る
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;
   }
-  // 実行モードの場合
+
   select_gspeed( "5:Search" );
   pos_x = 0; pos_y = 0; head = 0;
-  // 往復探索
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );  // 行きの探索
-  map_writeDF(MDATA_BK1);	// MAPデータをDataFlashへ書込み  
-  mouse_search( 0, 0, GSPEEDvar, S_MODE );            // 帰りの探索
-  map_writeDF(MDATA_BK1);	// MAPデータをDataFlashへ書込み  
+  ccnt(0);
+  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );
+  map_writeDF(MDATA_BK1);
+  ccnt(0);
+  mouse_search( 0, 0, GSPEEDvar, S_MODE );
+  map_writeDF(MDATA_BK1);
 }
+
+
 //-------------------------------------------------------------------------
 //  Mode6 : 二次走行
 //-------------------------------------------------------------------------
 void mode6( int x )
 {
-  if( x == DISP )  // DISPモードの場合
+  if( x == DISP )
   {
-    // モード内容表示
     LCD_print( 0, "6:Try   " );
     LCD_print( 8, "Spd " );
-    LCD_dec_out( 12, GSPEEDvar, 3 );   //現在の設定スピード
-    return;                     // 以下の実行処理をしないで戻る
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;
   }
-  // 実行モードの場合
-  // 二次走行
+
   select_gspeed( "6:Try   " );
-  map_DFread(MDATA_BK1);	//MAPデータをDataFlashから戻す
+  map_DFread(MDATA_BK1);
   pos_x = 0; pos_y = 0; head = 0;
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );	// 二次走行
+  ccnt(0);
+  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );
 }
+
+
 //-------------------------------------------------------------------------
 // Mode7 :探索走行 帰りの探索無し 
 //-------------------------------------------------------------------------
