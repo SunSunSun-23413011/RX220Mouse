@@ -183,6 +183,7 @@ void WaitKeyOff( void );
 void beep(unsigned char tone,int value);
 void change_mode( int x );
 void exec_mode( void );
+void modeB1( int x );
 void mode0( int x );
 void mode1( int x );
 void mode2( int x );
@@ -630,8 +631,9 @@ void change_mode( int x )
 {
   MODE += x;                            // モード更新
   if( MODE >= ModeMax ) MODE = 0;       // モードが超えている場合は0に戻す
-  if( MODE < 0 )  MODE = ModeMax - 1;   // モードが負の場合はモードを最大値に設定
-  if     ( MODE == 0 ) mode0( DISP );   // Mode0:
+  if( MODE < 0 )  MODE = ModeMax - 2;   // モードが負の場合はモードを最大値に設定
+  if     ( MODE == -1) modeB1( DISP );
+  else if( MODE == 0 ) mode0( DISP );   // Mode0:
   else if( MODE == 1 ) mode1( DISP );   // Mode1:
   else if( MODE == 2 ) mode2( DISP );   // Mode2:
   else if( MODE == 3 ) mode3( DISP );   // Mode3:
@@ -645,7 +647,8 @@ void change_mode( int x )
 //-------------------------------------------------------------------------
 void exec_mode( void )
 {
-  if     ( MODE == 0 ) mode0( EXEC );   // Mode0:
+  if     ( MODE == -1 ) modeB1( EXEC );
+  else if( MODE == 0 ) mode0( EXEC );   // Mode0:
   else if( MODE == 1 ) mode1( EXEC );   // Mode1:
   else if( MODE == 2 ) mode2( EXEC );   // Mode2:
   else if( MODE == 3 ) mode3( EXEC );   // Mode3:
@@ -654,6 +657,26 @@ void exec_mode( void )
   else if( MODE == 6 ) mode6( EXEC );   // Mode6:
   else if( MODE == 7 ) mode7( EXEC );   // Mode7:
 }
+
+//-------------------------------------------------------------------------
+//  ModeB1 : モータテスト
+//-------------------------------------------------------------------------
+void modeB1(int x)
+{
+  if( x == DISP )  // DISPモードの場合
+  {
+    // モード内容表示
+    LCD_print( 0, "B1:MPDEL" );
+    LCD_print( 8, "        " );
+    return;                     // 以下の実行処理をしないで戻る
+  }
+  //実行モード
+  LCD_print( 8, "Really? " );
+  while(1){
+    if( SW_EXEC == 0 ) { DFlash_init(); return; }
+  }
+}
+
 //-------------------------------------------------------------------------
 //  Mode0 : センサチェック
 //-------------------------------------------------------------------------
@@ -707,7 +730,7 @@ void mode1(int x)
     if( SW_UP   == 0 ) { speed += 100; WaitKeyOff(); }
     if( SW_DOWN == 0 ) { speed -= 100; WaitKeyOff(); }
     if( SW_EXEC == 0 ) { speed = 0; return; }
-    if( speed > 500 )    speed = 500;
+    if( speed > 2000 )    speed = 2000;
     else if( speed < 0 )  speed = 0;
   }
 }
