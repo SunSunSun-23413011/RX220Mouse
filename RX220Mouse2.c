@@ -107,6 +107,8 @@ void abort(void);
 static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // preset target speeds
 #define   GSPEED_LEVELS        ((int)(sizeof(GSSPEED) / sizeof(GSSPEED[0])))
 #define   GSPEED_DEFAULT_INDEX (GSPEED_LEVELS - 1)
+// ?????x?Z???T?l???????????~Z???T?????W?X?g?^
+#define   WALL_SAMPLE_MAX 256
 // データフラッシュ関連 1/30 31 2/1
 #define CLOCK            20     // クロックソースの選択 に合わせること [MHz]
 #define FDATA_A			(0x0100000)	//データフラッシュの先頭
@@ -169,7 +171,11 @@ uchar    head_change;      // 進行方向更新用変数 0:前 1:右 2:後 3:左
 uchar    pos_x;            // マウスの現在座標 x
 uchar    pos_y;            // マウスの現在座標 y
 uchar    map[16][16];      // MAPデータ
-uchar    p_map[16][16];    // ポテンシャルMAPデータ
+uchar    p_map[16][16];    // ?|?e???V????MAP?f?[?^
+// ?Z???T?????p
+short    wall_sample_left[ WALL_SAMPLE_MAX ];
+short    wall_sample_right[ WALL_SAMPLE_MAX ];
+ushort   wall_sample_count;    // ポテンシャルMAPデータ
 //---------------------------------------------------------------
 //  関数プロトタイプ宣言
 //---------------------------------------------------------------
@@ -213,7 +219,10 @@ void clear_flash(unsigned short);	//  ブロック消去
 void wait_frdy(int);		//  FCU処理待ち  
 void DFlash_init(void);		//  データフラッシュ初期化 (周辺クロックをFCUに通知する関数)   
 void DFlash_bread(unsigned short ,unsigned short *);	// DataFlashメモリ1ブロック(128byte)読出し  
-void DFlash_bprog(unsigned short ,unsigned short *);	// DataFlashメモリ1ブロック(128byte)書込み  
+void DFlash_bprog(unsigned short ,unsigned short *);    // DataFlash??????1?u???b?N(128byte)??????  
+void reset_wall_samples( void );
+void log_wall_samples( void );
+void update_wall_ref_from_log( void );
 //---------------------------------------------------------------
 //  メインプログラム
 //---------------------------------------------------------------
@@ -412,6 +421,44 @@ void load_param( void )
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
 }
 //---------------------------------------------------------------
+//  センサ中央値更新
+//---------------------------------------------------------------
+void reset_wall_samples( void )
+{
+  wall_sample_count = 0;
+}
+
+void log_wall_samples( void )
+{
+  if( wall_sample_count >= WALL_SAMPLE_MAX )
+    return;
+  if( control_mode == 0 || speed == 0 )
+    return;
+  if( L_SEN > L_LIM && R_SEN > R_LIM )
+  {
+    wall_sample_left[ wall_sample_count ] = L_SEN;
+    wall_sample_right[ wall_sample_count ] = R_SEN;
+    wall_sample_count++;
+  }
+}
+
+void update_wall_ref_from_log( void )
+{
+  ushort i;
+  long sum_l = 0;
+  long sum_r = 0;
+
+  if( wall_sample_count == 0 )
+    return;
+
+  for( i = 0; i < wall_sample_count; i++ ){
+    sum_l += wall_sample_left[ i ];
+    sum_r += wall_sample_right[ i ];
+  }
+  L_REF = (short)( sum_l / wall_sample_count );
+  R_REF = (short)( sum_r / wall_sample_count );
+}
+//---------------------------------------------------------------
 //  Timer  CMT0 割り込み(200us毎にこの関数が勝手に優先して実行される) [int_timerw]の代わり
 //---------------------------------------------------------------
 // Pico3に合わせる。「#pragma interrupt」を使わず、intprg.c内に関数を書いて、呼び出させる。」
@@ -545,6 +592,7 @@ void timerc_200us( void )
                if( L_PRE <= 999 )  L_SEN = L_PRE;    // 表示上限処理
                else                L_SEN = 999;
                break;
+               log_wall_samples();                    // ????NZ???T?l?????
       case 3:  // 前センサ消灯時の測定 ,AN2
                if ( F_SW == LED_OFF ) break;         // センサON/OFFの確認
                S12AD.ADANSA.WORD = 0x0004;		//AN002
@@ -901,6 +949,7 @@ void mode7( int x )
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion;
+  reset_wall_samples();
   countdown();                  // カウントダウン
   while( 1 ){
     // １つのループは区間中心から次の区間中心まで
@@ -1065,6 +1114,7 @@ void countdown( void )
 //-------------------------------------------------------------------------
 void finish( void )
 {
+  update_wall_ref_from_log();
   beep( 8 , 150 );
   beep( 0 , 150 );
   beep( 8 , 150 );
