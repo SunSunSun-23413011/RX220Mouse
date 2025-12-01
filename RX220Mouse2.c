@@ -110,8 +110,6 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define   GSPEED_DEFAULT_INDEX (GSPEED_LEVELS - 1)
 // ?????x?Z???T?l???????????~Z???T?????W?X?g?^
 #define   WALL_SAMPLE_MAX 256
-#define   FRONT_CENTER_SAMPLE_COUNT 5      // number of samples to build median at cell center
-#define   FRONT_CENTER_WINDOW       40     // step width around cell center to accept samples
 // データフラッシュ関連 1/30 31 2/1
 #define CLOCK            20     // クロックソースの選択 に合わせること [MHz]
 #define FDATA_A			(0x0100000)	//データフラッシュの先頭
@@ -296,11 +294,6 @@ short    L_REF;            // 左センサしきい値
 short    R_LIM;            // 右壁有無しきい値
 short    L_LIM;            // 左壁有無しきい値
 short    F_LIM;            // 前壁有無しきい値
-short    front_center_samples[ FRONT_CENTER_SAMPLE_COUNT ];
-ushort   front_center_sample_count;
-short    F_CENTER_MEDIAN;
-volatile unsigned char front_stop_enabled;
-volatile unsigned char front_stop_triggered;
 // モータ関連
 ushort   timerL;           // 左タイマー設定値
 ushort   timerR;           // 右タイマー設定値
@@ -380,8 +373,6 @@ void DFlash_bprog(unsigned short ,unsigned short *);    // DataFlash??????1?u???
 void reset_wall_samples( void );
 void log_wall_samples( void );
 void update_wall_ref_from_log( void );
-void reset_front_center_log( void );
-void log_front_center_value( void );
 //---------------------------------------------------------------
 //  メインプログラム
 //---------------------------------------------------------------
@@ -617,64 +608,6 @@ void update_wall_ref_from_log( void )
   L_REF = (short)( sum_l / wall_sample_count );
   R_REF = (short)( sum_r / wall_sample_count );
 }
-
-static short median_front_samples( const short *values, ushort count )
-{
-  short buf[ FRONT_CENTER_SAMPLE_COUNT ];
-  ushort i, j;
-
-  if( count == 0 )
-    return 0;
-
-  if( count > FRONT_CENTER_SAMPLE_COUNT )
-    count = FRONT_CENTER_SAMPLE_COUNT;
-
-  for( i = 0; i < count; i++ )
-    buf[ i ] = values[ i ];
-
-  for( i = 0; i + 1 < count; i++ )
-    for( j = i + 1; j < count; j++ )
-      if( buf[ i ] > buf[ j ] ){
-        short t = buf[ i ];
-        buf[ i ] = buf[ j ];
-        buf[ j ] = t;
-      }
-
-  return buf[ count / 2 ];
-}
-
-void reset_front_center_log( void )
-{
-  front_center_sample_count = 0;
-  F_CENTER_MEDIAN = 0;
-  front_stop_triggered = 0;
-}
-
-void log_front_center_value( void )
-{
-  ushort step_in_cell;
-
-  if( control_mode == 0 )
-    return;
-  if( front_center_sample_count >= FRONT_CENTER_SAMPLE_COUNT )
-    return;
-  if( F_SEN <= F_LIM )
-    return;
-  if( GO_STEP == 0 )
-    return;
-
-  step_in_cell = STEP % GO_STEP;
-  if( step_in_cell + FRONT_CENTER_WINDOW < ( GO_STEP / 2 ) )
-    return;
-  if( step_in_cell > ( GO_STEP / 2 + FRONT_CENTER_WINDOW ) )
-    return;
-
-  front_center_samples[ front_center_sample_count ] = F_SEN;
-  front_center_sample_count++;
-
-  if( front_center_sample_count == FRONT_CENTER_SAMPLE_COUNT )
-    F_CENTER_MEDIAN = median_front_samples( front_center_samples, front_center_sample_count );
-}
 //---------------------------------------------------------------
 //  Timer  CMT0 割り込み(200us毎にこの関数が勝手に優先して実行される) [int_timerw]の代わり
 //---------------------------------------------------------------
@@ -833,11 +766,6 @@ void timerc_200us( void )
                                                      // 事前計測値との差分を取る(ノイズ処理)
                if( F_PRE <= 999 )  F_SEN = F_PRE;
                else                F_SEN = 999;        // 表示上限処理
-               log_front_center_value();
-               if( front_stop_enabled && F_CENTER_MEDIAN > 0 && F_SEN >= F_CENTER_MEDIAN ){
-                 speed = 1;
-                 front_stop_triggered = 1;
-               }
                break;
       case 4:  // モータ用電源コントロール
                if( speed != 0 ) MotorTimer = 3000;   // モータ動作時はタイマーセット
@@ -1203,7 +1131,8 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion;
   reset_wall_samples();
-  countdown();                  // カウントダウン
+  //countdown();                  
+  // カウントダウン
   while( 1 ){
     // １つのループは区間中心から次の区間中心まで
     // 最初に半区画直進
@@ -1291,47 +1220,37 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 //-------------------------------------------------------------------------
 void com_go( int n )
 {
-  control_mode = 1;                       // enable straight control
-  step_r = 0;
-  step_l = 0;
-  STEP = 0;
-  rdir = 0; ldir = 0;                     // both motors forward
-  reset_front_center_log();
-  front_stop_enabled = 1;
-  front_stop_triggered = 0;
-  // accelerate
-  speed = GSPEEDvar;
-  while( speed > speed_now );
-  // cruise
-  speed = speed_now;
-  while( STEP < GO_STEP * n - speed_now * 2 && front_stop_triggered == 0 );
-  // decelerate
-  speed = 1;
-  while( STEP < GO_STEP * n && front_stop_triggered == 0 );
-  if( front_stop_triggered ){
-    com_stop();
-    return;
-  }
+  control_mode = 1;                       // 直線走行用姿勢制御
+  step_r = 0;                               //右ステップ数をリセット
+  step_l = 0;                               //左ステップ数をリセット
+  STEP = 0;                               // 距離カウンタクリア
+  rdir = 0; ldir = 0;                     // 回転方向を直進
+  // 加速モード
+  speed = GSPEEDvar;        // 目標速度設定
+  while( speed > speed_now );                   // 目標速度になるまで加速 
+  // 定速モード
+  speed = speed_now;  // 加速後の速度
+  while( STEP < GO_STEP * n - speed_now * 2 );  // 減速ステップ数を残して定速移動
+                                                // 全体ステップ数-減速用ステップ数
+  // 減速モード
+  speed = 1;          // 最低速度設定
+  while( STEP < GO_STEP * n );                  // 残りのステップ数で減速 
 }
-
 //-------------------------------------------------------------------------
-//  Stop routine
+//  停止モジュール
 //-------------------------------------------------------------------------
 void com_stop( void )
 {
-  control_mode = 0;           // disable control
-  rdir = 0; ldir = 0;         // motors forward
-  step_r = 0;
-  step_l = 0;
-  STEP = 0;
-  speed = 0;  speed_now = 0;
-  front_stop_enabled = 0;
-  reset_front_center_log();
-  pause(100);                 // short settle
+  control_mode = 0;           // 姿勢制御無し
+  rdir = 0; ldir = 0;         // モータの回転方向を前進
+  step_r = 0;                               //右ステップ数をリセット
+  step_l = 0;                               //左ステップ数をリセット
+  STEP = 0;                   // 距離カウンタをリセット
+  speed = 0;  speed_now = 0;  // モータの制御用の変数をリセット
+  pause(100);                 // 0.1秒モータを停止
 }
-
 //-------------------------------------------------------------------------
-//  Turn routine (0:R90 1:L90 2:R180 3:L180)
+//  旋回モジュール (0:R90 1:L90 2:R180 3:L180) 
 //-------------------------------------------------------------------------
 void com_turn( int t_mode )
 {
