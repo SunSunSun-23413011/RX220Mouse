@@ -232,9 +232,12 @@ volatile unsigned char melody_playing = 0;
 
 static unsigned short midi_to_tgr_count( int midi )
 {
+  double freq;
+  double cnt;
+
   if( midi <= 0 ) return 0;
-  double freq = 440.0 * pow( 2.0, ((double)midi - 69.0) / 12.0 );
-  double cnt  = (312500.0 / ( 2.0 * freq )) - 1.0;
+  freq = 440.0 * pow( 2.0, ((double)midi - 69.0) / 12.0 );
+  cnt  = (312500.0 / ( 2.0 * freq )) - 1.0;
   if( cnt < 0.0 )      cnt = 0.0;
   if( cnt > 65535.0 )  cnt = 65535.0;
   return (unsigned short)( cnt + 0.5 );
