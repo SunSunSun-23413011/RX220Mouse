@@ -727,7 +727,7 @@
   <Class Guid="611ccd33-b851-4726-9e3f-a4209353c34d">
     <Instance Guid="00000000-0000-0000-0000-000000000000">
       <PanelCount>1</PanelCount>
-      <InstanceGuid0>1aaa0a0f-17c2-4e61-964c-a31b70c0b5fa</InstanceGuid0>
+      <InstanceGuid0>15d21294-ce5e-41db-a0d8-ec1c5207a9f4</InstanceGuid0>
       <HelperClassGuid0>e9e5eb74-fd3b-4a6d-9bee-88bf153cb9b0</HelperClassGuid0>
       <Document.Path0>D:\RX220Mouse2\iodefine.h</Document.Path0>
       <ProjectItem.InstanceGuid0>17c5632c-ab45-459c-a238-c3630c436e1a</ProjectItem.InstanceGuid0>
