@@ -236,9 +236,17 @@ static const melody_step_t ccnt_melody[] = {
 
 #define CCNT_MELODY_LENGTH ((ushort)(sizeof(ccnt_melody) / sizeof(ccnt_melody[0])))
 
-static volatile ushort ccnt_ms_left = 0;
-static volatile ushort ccnt_step_index = 0;
-static volatile uchar  ccnt_playing = 0;
+
+static volatile ushort melody_ms_left = 0;
+static volatile ushort melody_step_index = 0;
+static volatile uchar  melody_playing = 0;
+static const melody_step_t *active_melody = 0;
+static ushort active_melody_length = 0;
+static const unsigned short accel_note_duration_ms = 80;
+static const unsigned char accel_notes[] = { BEEP_C5, BEEP_D5, BEEP_E5, BEEP_F5 };
+#define ACCEL_TONE_COUNT (sizeof(accel_notes) / sizeof((accel_notes)[0]))
+static melody_step_t accel_note_step = { BEEP_C5, accel_note_duration_ms };
+static uchar accel_note_index = 0;
 
 static inline void buzzer_set_tone(unsigned char tone)
 {
@@ -251,28 +259,39 @@ static inline void buzzer_set_tone(unsigned char tone)
   MTU.TSTR.BIT.CST0 = 1;           // start Beep timer
 }
 
-static inline void ccnt_playback_tick(void)
+static void melody_playback_tick(void)
 {
-  if( ccnt_playing == 0 )
+  if( melody_playing == 0 || active_melody == 0 )
     return;
 
-  if( ccnt_ms_left > 0 ){
-    ccnt_ms_left--;
+  if( melody_ms_left > 0 ){
+    melody_ms_left--;
     return;
   }
 
-  if( ccnt_step_index >= CCNT_MELODY_LENGTH ){
+  if( melody_step_index >= active_melody_length ){
     buzzer_set_tone( BEEP_MUTE );
-    ccnt_playing = 0;
+    melody_playing = 0;
     return;
   }
 
-  buzzer_set_tone( ccnt_melody[ ccnt_step_index ].tone );
-  ccnt_ms_left = ccnt_melody[ ccnt_step_index ].duration_ms;
-  ccnt_step_index++;
+  buzzer_set_tone( active_melody[ melody_step_index ].tone );
+  melody_ms_left = active_melody[ melody_step_index ].duration_ms;
+  melody_step_index++;
 }
 
+static void start_melody(const melody_step_t *melody, ushort length)
+{
+  if( melody == 0 || length == 0 )
+    return;
 
+  active_melody = melody;
+  active_melody_length = length;
+  melody_step_index = 0;
+  melody_ms_left = 0;
+  melody_playing = 1;
+  melody_playback_tick();  // start first note immediately
+}
 
 // センサの事前値格納用
 vushort  R_PRE;           // 右センサの値
@@ -336,7 +355,10 @@ void int_mot_r(void);		//RX
 void int_mot_l(void); 		//RX
 void WaitKeyOff( void );
 void beep(unsigned char tone,int value);
+
+
 void ccnt( int x );
+
 void change_mode( int x );
 void exec_mode( void );
 void modeB1( int x );
@@ -359,73 +381,21 @@ void clear_map( void );
 void make_map_data( void );
 void make_potential( int gx, int gy, int mode );
 int search_adachi( void );
-void map_writeDF(short);	// MAPデータをDataFlashへ書込み   
-void map_DFread(short);	// MAPデータをDataFlashから読出し   
-void fcu_reset(void);		// FCUをリセット 
-void fcu_tope(void) ;		//  FCUをP/Eモードにする  
-void fcu_toread(void);		//  FCUを読み込みモードにする  
-void error_check(void);	//  エラーを確認し、エラーがあれば修正する  
-void clear_flash(unsigned short);	//  ブロック消去  
-void wait_frdy(int);		//  FCU処理待ち  
-void DFlash_init(void);		//  データフラッシュ初期化 (周辺クロックをFCUに通知する関数)   
-void DFlash_bread(unsigned short ,unsigned short *);	// DataFlashメモリ1ブロック(128byte)読出し  
+void map_writeDF(short);	// MAP?f?[?^??DataFlash???????   
+void map_DFread(short);	// MAP?f?[?^??DataFlash?????o??   
+void fcu_reset(void);		// FCU????Z?b?g 
+void fcu_tope(void) ;		//  FCU??P/E???[?h?????  
+void fcu_toread(void);		//  FCU?????????[?h????  
+void error_check(void);	//  ?G???[??m?F???A?G???[???????C??????  
+void clear_flash(unsigned short);	//  ?u???b?N????  
+void wait_frdy(int);	//  FCU???????  
+void DFlash_init(void);		//  ?f?[?^?t???b?V???????? (????N???b?N??FCU???m??????)   
+void DFlash_bread(unsigned short ,unsigned short *);	// DataFlash??????1?u???b?N(128byte)??o??  
 void DFlash_bprog(unsigned short ,unsigned short *);    // DataFlash??????1?u???b?N(128byte)??????  
 void reset_wall_samples( void );
 void log_wall_samples( void );
 void update_wall_ref_from_log( void );
-//---------------------------------------------------------------
-//  メインプログラム
-//---------------------------------------------------------------
-void main(void)
-{
-  IO_init();    // IOの初期化
-  LCD_init();   // LCDの初期化
-  CPU_LED = 1;  // CPU層LEDを消灯 赤
-  LED = LED_OFF;                        // LEDを消灯
-  MOTOR_EN =0;  // モータOFF
-  // 起動音
-  beep( BEEP_C5, 150 );
-  beep( BEEP_G5, 150 );
-  beep( BEEP_C5, 150 );
-  beep( BEEP_G5, 150 );
-  // タイトル表示
-  LCD_print( 0, "LE-S200P" );
-  // 電圧表示
-  LCD_print( 8, "   .  v " );
-  LCD_dec_out( 9, Batt/100, 1);    // 十の位を表示
-  Batt %= 100;                     // 十の位を削除
-  LCD_dec_out(10, Batt/10 , 1);    // 一の位を表示
-  Batt %= 10;                      // 一の位を削除
-  LCD_dec_out(12, Batt    , 1);    // 残った小数値を表示
-  pause( 2000 );
-  clear_map();                     // MAPデータ初期化
-  load_param();                    // 各種パラメータを読み込み
-  change_mode( 0 );                // まず初期画面にする = Mode0
-  // メインループ
-  while( 1 ){
-    if( SW_UP == SW_ON ){          // 上SWが押されている場合
-      WaitKeyOff();                // チャタリング防止処理
-      change_mode(+1);             // モード+1
-    }else if( SW_DOWN == SW_ON ){  // 下SWが押されている場合
-      WaitKeyOff();                // チャタリング防止処理
-      change_mode(-1);             // モード-1
-    }else if( SW_EXEC == SW_ON ){  // 実行SWが押されている場合
-      beep( BEEP_D5, 150 );              // 実行音 : ド
-      WaitKeyOff();                // チャタリング防止処理
-      exec_mode();                 // モード実行
-      MODE = 0;
-      change_mode( 0 );            // 実行後は初期画面に戻す
-    }
-    // モードが0ならセンサデータをLCD表示
-    if( MODE == 0 )
-    {
-      LCD_dec_out(  3, F_SEN, 3 ); // 前センサ値をLCD上中央に表示
-      LCD_dec_out(  9, L_SEN, 3 ); // 左センサ値をLCD左下に表示
-      LCD_dec_out( 13, R_SEN, 3 ); // 右センサ値をLCD右下に表示
-      
-    }
-  }
-}
+
 //---------------------------------------------------------------
 //  RX220初期化 (ここは後で整理7/14)
 //---------------------------------------------------------------
@@ -616,6 +586,7 @@ void timerc_200us( void )
 {
   int err_l, err_r;
   ushort acc_num, lspeed, rspeed;
+  uchar accelerating = 0;
   // 左モータ割り込み
     MTU3.TGRC = timerL;                     // 次の速度をセット
     if( speed != 0 ){ 
@@ -649,11 +620,21 @@ void timerc_200us( void )
       MTU4.TGRC = timerR;
 //      CPU_LEDB = 1;  // CPU層LEDを消灯 青
     }else{
-      if( speed > speed_now )       speed_now++;  // 加速
-      else if( speed < speed_now )  speed_now--;  // 減速
+      accelerating = 0;
+      if( speed > speed_now ){
+        speed_now++;  // 加速
+        accelerating = 1;
+      }else if( speed < speed_now ){
+        speed_now--;  // 減速
+      }
       if( speed_now >= 2000 ) speed_now = 1999;     // 最高速度
       if( speed_now < 0     ) speed_now = 0;      // 最低速度
       acc_num = AccTable[ speed_now ];     // 加速度テーブルから値取得
+      if( accelerating && melody_playing == 0 ){
+        accel_note_step.tone = accel_notes[ accel_note_index ];
+        accel_note_index = ( accel_note_index + 1 ) % ACCEL_TONE_COUNT;
+        start_melody( &accel_note_step, 1 );
+      }
       // 姿勢制御
       if( control_mode == 1 )
       {
@@ -694,7 +675,7 @@ void timerc_200us( void )
     {
       case 0:  // 1msecタイマー&LCDの更新
                wait_timer++;     // wait関数用カウンタ
-               ccnt_playback_tick();
+               melody_playback_tick();
                LCD();            // LCD更新処理
                break;
       case 1:  // 右センサ消灯時の測定 AN0
@@ -834,19 +815,31 @@ void beep(unsigned char tone,int value)
 //-------------------------------------------------------------------------
 //  ccnt melody (non-blocking playback)
 //-------------------------------------------------------------------------
+
+
 void ccnt( int x )
+
 {
+
   if( x != 0 )  return;
 
-  ccnt_step_index = 0;
-  ccnt_ms_left = 0;
-  ccnt_playing = 1;
-  ccnt_playback_tick();  // start first note immediately
 
-  while( ccnt_playing ){
+
+  start_melody( ccnt_melody, CCNT_MELODY_LENGTH );
+
+
+
+  while( melody_playing ){
+
     pause( 1 );
+
   }
+
 }
+
+
+
+
 
 
 
