@@ -564,7 +564,7 @@ void load_param( void )
   // 壁の有無判定用しきい値:各センサ壁あり最小値と壁なし値の中間値
   R_LIM   =  150;    // 右 11/6[147-459-537,317] 350
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
-  F_LIM   = 170;    // 前 11/6[71-340-925] 100 150
+  F_LIM   = 150;    // 前 11/6[71-340-925] 100 150
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1640; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
@@ -1713,7 +1713,7 @@ int search_adachi( void )
   // 1:未探索＆直進
   // 優先度が同じ結果の場合は北東南西の順に優先される
   // 北方向の優先度の計算
-  if(( wall_data & 0x01 ) == 0 ){     // 北方向に壁が無いとき
+  if(( wall_data & 0x01 ) == 0 && pos_y < 15 ){     // 北方向に壁が無いとき
     // 1.ポテンシャルを元に基本優先度を計算
     val = p_map[ pos_x ][ pos_y + 1 ] * 4 + 4;
     // 2.方向による優先度の計算
@@ -1729,7 +1729,7 @@ int search_adachi( void )
     }
   }
   // 東方向の優先度の計算
-  if(( wall_data & 0x02 ) == 0 ){     // 東方向に壁が無いとき
+  if(( wall_data & 0x02 ) == 0 && pos_x < 15 ){     // 東方向に壁が無いとき
     val = p_map[ pos_x + 1 ][ pos_y ] * 4 + 4;
     if( head == 1 )  val -= 1;
     if(( map[ pos_x + 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= 2;
@@ -1739,7 +1739,7 @@ int search_adachi( void )
     }
   }
   // 南方向の優先度の計算
-  if(( wall_data & 0x04 ) == 0 ){     // 南方向に壁が無いとき
+  if(( wall_data & 0x04 ) == 0 && pos_y > 0 ){     // 南方向に壁が無いとき
     val = p_map[ pos_x ][ pos_y - 1 ] * 4 + 4;
     if( head == 2 )  val -= 1;
     if(( map[ pos_x ][ pos_y - 1 ] & 0xf0 ) != 0xf0 )  val -= 2;
@@ -1749,7 +1749,7 @@ int search_adachi( void )
     }
   }
   // 西方向の優先度の計算
-  if(( wall_data & 0x08 ) == 0 ){     // 西方向に壁が無いとき
+  if(( wall_data & 0x08 ) == 0 && pos_x > 0 ){     // 西方向に壁が無いとき
     val = p_map[ pos_x - 1 ][ pos_y ] * 4 + 4;
     if( head == 3 )  val -= 1;
     if(( map[ pos_x - 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= 2;
