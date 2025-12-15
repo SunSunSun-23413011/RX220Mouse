@@ -89,9 +89,26 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     8    // 動作モード数
+#define   ModeMax     9    // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
+
+// ゴール座標候補一覧
+typedef struct {
+  uchar x;
+  uchar y;
+  const char *label;
+} goal_choice_t;
+
+static const goal_choice_t goal_choices[] = {
+  { 3, 3, "(3,3)" },
+  { 7, 7, "(7,7)" },
+  { 7, 8, "(7,8)" },
+  { 8, 7, "(8,7)" },
+  { 8, 8, "(8,8)" }
+};
+#define   GOAL_CHOICE_COUNT ((int)(sizeof(goal_choices) / sizeof(goal_choices[0])))
+
 // センサ関連
 #define   LED_ON      1    // センサ用LED点燈
 #define   LED_OFF     0    // センサ用LED消灯
@@ -101,8 +118,6 @@ void abort(void);
 #define   RightGo     0    // 右モータ前進
 #define   RightBack   1    // 右モータ後進
 // 探索関連
-#define   GOAL_X      7    // ゴール x座標  5 
-#define   GOAL_Y      8    // ゴール y座標  3 
 #define   S_MODE      0    // Search Mode : 未探索区間は壁無しとして扱う
 #define   T_MODE      1    // Try Mode    : 未探索区間は壁有りとして扱う
 static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // preset target speeds
@@ -321,6 +336,9 @@ uchar    pos_x;            // マウスの現在座標 x
 uchar    pos_y;            // マウスの現在座標 y
 uchar    map[16][16];      // MAPデータ
 uchar    p_map[16][16];    // ?|?e???V????MAP?f?[?^
+int      goal_choice_index = GOAL_CHOICE_COUNT - 1;  // default goal = (8,8)
+uchar    goal_x;           // current goal x coordinate
+uchar    goal_y;           // current goal y coordinate
 // ?Z???T?????p
 short    wall_sample_left[ WALL_SAMPLE_MAX ];
 short    wall_sample_right[ WALL_SAMPLE_MAX ];
@@ -348,6 +366,7 @@ void mode4( int x );
 void mode5( int x );
 void mode6( int x );
 void mode7( int x );
+void mode8( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
@@ -373,6 +392,21 @@ void DFlash_bprog(unsigned short ,unsigned short *);    // DataFlash??????1?u???
 void reset_wall_samples( void );
 void log_wall_samples( void );
 void update_wall_ref_from_log( void );
+static void set_goal_choice_index( int index )
+{
+  if( index < 0 )
+    index = GOAL_CHOICE_COUNT - 1;
+  else if( index >= GOAL_CHOICE_COUNT )
+    index = 0;
+  goal_choice_index = index;
+  goal_x = goal_choices[ index ].x;
+  goal_y = goal_choices[ index ].y;
+}
+
+static void advance_goal_choice( int delta )
+{
+  set_goal_choice_index( goal_choice_index + delta );
+}
 //---------------------------------------------------------------
 //  メインプログラム
 //---------------------------------------------------------------
@@ -400,6 +434,7 @@ void main(void)
   pause( 2000 );
   clear_map();                     // MAPデータ初期化
   load_param();                    // 各種パラメータを読み込み
+  set_goal_choice_index( goal_choice_index );  // initialize goal selection
   change_mode( 0 );                // まず初期画面にする = Mode0
   // メインループ
   while( 1 ){
@@ -868,6 +903,7 @@ void change_mode( int x )
   else if( MODE == 5 ) mode5( DISP );   // Mode5:
   else if( MODE == 6 ) mode6( DISP );   // Mode6:
   else if( MODE == 7 ) mode7( DISP );   // Mode7:
+  else if( MODE == 8 ) mode8( DISP );   // Mode8:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -883,6 +919,7 @@ void exec_mode( void )
   else if( MODE == 5 ) mode5( EXEC );   // Mode5:
   else if( MODE == 6 ) mode6( EXEC );   // Mode6:
   else if( MODE == 7 ) mode7( EXEC );   // Mode7:
+  else if( MODE == 8 ) mode8( EXEC );   // Mode8:
 }
 
 //-------------------------------------------------------------------------
@@ -1077,7 +1114,7 @@ void mode5( int x )
   select_gspeed( "5:Search" );
   pos_x = 0; pos_y = 0; head = 0;
   ccnt(0);
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );
+  mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );
   map_writeDF(MDATA_BK1);
   ccnt(0);
   mouse_search( 0, 0, GSPEEDvar, S_MODE );
@@ -1102,7 +1139,7 @@ void mode6( int x )
   map_DFread(MDATA_BK1);
   pos_x = 0; pos_y = 0; head = 0;
   ccnt(0);
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, T_MODE );
+  mouse_search( goal_x, goal_y, GSPEEDvar, T_MODE );
 }
 
 
@@ -1123,7 +1160,34 @@ void mode7( int x )
   select_gspeed( "Sear+-:7" );
   pos_x = 0; pos_y = 0; head = 0;
   // 探索
-  mouse_search( GOAL_X, GOAL_Y, GSPEEDvar, S_MODE );  // 行きの探索
+  mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );  // 行きの探索
+}
+//-------------------------------------------------------------------------
+// Mode8 : ゴール座標選択
+//-------------------------------------------------------------------------
+void mode8( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "8:GoalSel" );
+    LCD_print( 8, goal_choices[ goal_choice_index ].label );
+    return;
+  }
+  while( 1 ){
+    LCD_print( 0, "8:GoalSel" );
+    LCD_print( 8, goal_choices[ goal_choice_index ].label );
+    if( SW_UP == 0 ){
+      advance_goal_choice( +1 );
+      WaitKeyOff();
+    }else if( SW_DOWN == 0 ){
+      advance_goal_choice( -1 );
+      WaitKeyOff();
+    }else if( SW_EXEC == 0 ){
+      WaitKeyOff();
+      beep( BEEP_C5, 150 );
+      return;
+    }
+  }
 }
 //-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
