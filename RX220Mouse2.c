@@ -601,7 +601,7 @@ void load_param( void )
   // センサしきい値の決め打ち
   R_REF   = 490;    // 区画中央での右センサ値 11/6[147-459-537,317] 400
   L_REF   = 640;    // 区画中央での左センサ値 11/6[387-612-587,478] 550
-  F_REF   = 1500;    // 区画中央での前センサ値 11/6[71-340-925] 250
+  F_REF   = 155x0;    // 区画中央での前センサ値 11/6[71-340-925] 250
   // 壁の有無判定用しきい値:各センサ壁あり最小値と壁なし値の中間値
   R_LIM   =  150;    // 右 11/6[147-459-537,317] 350
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
@@ -1832,19 +1832,21 @@ int search_adachi( void )
 {
   uchar wall_data, motion;
   short val, min_val;
+  const short straight_priority = 2;     // Straight priority bonus
+  const short unvisited_priority = 1;    // Exploration bonus
   // 現在区画の壁情報取得
   wall_data = map[ pos_x ][ pos_y ];
   // 計算される優先度の最大値を初期値に設定
   min_val = 1025;  // 区画ポテンシャル最大値+1 255*4+4 +1 =1025
   // 周囲４つの方向に対して優先度を計算し，
   // 一番優先度が高い（値が小さい）区画に移動する．
-  // 優先度はポテンシャル，未／既探索，直進方向の順．
+  // 優先度はポテンシャル，直進，未／既探索の順．
   // 例：ポテンシャルが0の場合＝基本優先度は0*4+4=4
-  // ※未探索なら-2，直進なら-1の減算方式
-  // 4:既探索＆直進以外
-  // 3:既探索＆直進
-  // 2:未探索＆直進以外
+  // ※直進なら-2，未探索なら-1の減算方式
   // 1:未探索＆直進
+  // 2:既探索＆直進
+  // 3:未探索＆直進以外
+  // 4:既探索＆直進以外
   // 優先度が同じ結果の場合は北東南西の順に優先される
   // 北方向の優先度の計算
   if(( wall_data & 0x01 ) == 0 && pos_y < 15 ){     // 北方向に壁が無いとき
@@ -1852,10 +1854,10 @@ int search_adachi( void )
     val = p_map[ pos_x ][ pos_y + 1 ] * 4 + 4;
     // 2.方向による優先度の計算
     // 北方向が進行方向だった場合：-1(優先度を1上げる)
-    if( head == 0 )  val -= 1;
+    if( head == 0 )  val -= straight_priority;
     // 3.未探索／既探索による優先度の計算
     // 未探索:-2(優先度を2上げる)，既探索:0
-    if(( map[ pos_x ][ pos_y + 1 ] & 0xf0 ) != 0xf0 )  val -= 2;
+    if(( map[ pos_x ][ pos_y + 1 ] & 0xf0 ) != 0xf0 )  val -= unvisited_priority;
     // 最小値の更新
     if( val < min_val ){
       min_val = val;
@@ -1865,8 +1867,8 @@ int search_adachi( void )
   // 東方向の優先度の計算
   if(( wall_data & 0x02 ) == 0 && pos_x < 15 ){     // 東方向に壁が無いとき
     val = p_map[ pos_x + 1 ][ pos_y ] * 4 + 4;
-    if( head == 1 )  val -= 1;
-    if(( map[ pos_x + 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= 2;
+    if( head == 1 )  val -= straight_priority;
+    if(( map[ pos_x + 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= unvisited_priority;
     if( val < min_val ){
       min_val = val;
       motion = 1;  // 移動すべき方向を東に設定
@@ -1875,8 +1877,8 @@ int search_adachi( void )
   // 南方向の優先度の計算
   if(( wall_data & 0x04 ) == 0 && pos_y > 0 ){     // 南方向に壁が無いとき
     val = p_map[ pos_x ][ pos_y - 1 ] * 4 + 4;
-    if( head == 2 )  val -= 1;
-    if(( map[ pos_x ][ pos_y - 1 ] & 0xf0 ) != 0xf0 )  val -= 2;
+    if( head == 2 )  val -= straight_priority;
+    if(( map[ pos_x ][ pos_y - 1 ] & 0xf0 ) != 0xf0 )  val -= unvisited_priority;
     if( val < min_val ){
       min_val = val;
       motion = 2;  // 移動すべき方向を南に設定
@@ -1885,8 +1887,8 @@ int search_adachi( void )
   // 西方向の優先度の計算
   if(( wall_data & 0x08 ) == 0 && pos_x > 0 ){     // 西方向に壁が無いとき
     val = p_map[ pos_x - 1 ][ pos_y ] * 4 + 4;
-    if( head == 3 )  val -= 1;
-    if(( map[ pos_x - 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= 2;
+    if( head == 3 )  val -= straight_priority;
+    if(( map[ pos_x - 1 ][ pos_y ] & 0xf0 ) != 0xf0 )  val -= unvisited_priority;
     if( val < min_val ){
       min_val = val;
       motion = 3;  // 移動すべき方向を西に設定
