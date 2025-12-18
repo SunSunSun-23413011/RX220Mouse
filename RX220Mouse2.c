@@ -1018,8 +1018,8 @@ void mode2(int x)
     LCD_dec_out( 12, GO_STEP, 4 );
     if( SW_UP   == 0 ) { GO_STEP += 10; WaitKeyOff(); }
     if( SW_DOWN == 0 ) { GO_STEP -= 10; WaitKeyOff(); }
-//    if( SW_EXEC == 0 ) { WaitKeyOff();  com_go( 1 );  com_stop(); }
-    if( SW_EXEC == 0 ) { WaitKeyOff();  com_go( 1 );  com_stop(); break; }
+//  if( SW_EXEC == 0 ) { WaitKeyOff();  com_go( 1 );  com_stop(); }
+    if( SW_EXEC == 0 ) { WaitKeyOff();  com_go(1 );  com_stop(); break; }
   }
 }
 //-------------------------------------------------------------------------
@@ -1328,7 +1328,7 @@ void com_go( int n )
   STEP = 0;                               // 距離カウンタクリア
   rdir = 0; ldir = 0;                     // 回転方向を直進
   // 加速モード
-  speed = GSPEEDvar;        // 目標速度設定
+  speed = 100;        // 目標速度設定
   while( speed > speed_now );                   // 目標速度になるまで加速 
   // 定速モード
   speed = speed_now;  // 加速後の速度
