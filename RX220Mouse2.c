@@ -89,7 +89,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     9    // 動作モード数
+#define   ModeMax     10   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -367,6 +367,7 @@ void mode5( int x );
 void mode6( int x );
 void mode7( int x );
 void mode8( int x );
+void mode9( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
@@ -904,6 +905,7 @@ void change_mode( int x )
   else if( MODE == 6 ) mode6( DISP );   // Mode6:
   else if( MODE == 7 ) mode7( DISP );   // Mode7:
   else if( MODE == 8 ) mode8( DISP );   // Mode8:
+  else if( MODE == 9 ) mode9( DISP );   // Mode9:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -920,6 +922,7 @@ void exec_mode( void )
   else if( MODE == 6 ) mode6( EXEC );   // Mode6:
   else if( MODE == 7 ) mode7( EXEC );   // Mode7:
   else if( MODE == 8 ) mode8( EXEC );   // Mode8:
+  else if( MODE == 9 ) mode9( EXEC );   // Mode9:
 }
 
 //-------------------------------------------------------------------------
@@ -1189,6 +1192,40 @@ void mode8( int x )
     }
   }
 }
+
+//-------------------------------------------------------------------------
+//  Mode9 : Search 1 round trip + Try 4 round trips
+//-------------------------------------------------------------------------
+void mode9( int x )
+{
+  int round_trip;
+  if( x == DISP )
+  {
+    LCD_print( 0, "9:S1/T4 " );
+    LCD_print( 8, "Spd " );
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;
+  }
+
+  select_gspeed( "9:S1/T4 " );
+  pos_x = 0; pos_y = 0; head = 0;
+  ccnt(0);
+  mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );
+  map_writeDF(MDATA_BK1);
+  ccnt(0);
+  mouse_search( 0, 0, GSPEEDvar, S_MODE );
+  map_writeDF(MDATA_BK1);
+
+  map_DFread(MDATA_BK1);
+  pos_x = 0; pos_y = 0; head = 0;
+  for( round_trip = 0; round_trip < 4; round_trip++ ){
+    ccnt(0);
+    mouse_search( goal_x, goal_y, GSPEEDvar, T_MODE );
+    ccnt(0);
+    mouse_search( 0, 0, GSPEEDvar, T_MODE );
+  }
+}
+
 //-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
 //-------------------------------------------------------------------------
