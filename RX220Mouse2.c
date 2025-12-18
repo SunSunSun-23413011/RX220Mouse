@@ -131,6 +131,9 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define SDATA_BK	0	//センサーデータ保存用ブロック(0~1)
 #define MDATA_BK1	2	//データフラッシュマップ保存用ブロック1(2~3)
 #define MDATA_BK2	4	//データフラッシュマップ保存用ブロック2(4~5)
+
+#define SENSOR_DATA_MAGIC 0xA5A5  // sensor reference validity marker
+#define SENSOR_DATA_VERSION 0x0001 // format version for sensor data
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -381,6 +384,8 @@ void make_potential( int gx, int gy, int mode );
 int search_adachi( void );
 void map_writeDF(short);	// MAPデータをDataFlashへ書込み   
 void map_DFread(short);	// MAPデータをDataFlashから読出し   
+void sensor_ref_writeDF(void);	// store sensor reference data in DataFlash
+void sensor_ref_readDF(void);	// load sensor references from DataFlash
 void fcu_reset(void);		// FCUをリセット 
 void fcu_tope(void) ;		//  FCUをP/Eモードにする  
 void fcu_toread(void);		//  FCUを読み込みモードにする  
@@ -606,6 +611,7 @@ void load_param( void )
     TURN_STEP = 550;  // 90度旋回ステップ数  
      gspeed_index = GSPEED_DEFAULT_INDEX;
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
+  sensor_ref_readDF();
 }
 //---------------------------------------------------------------
 //  センサ中央値更新
@@ -644,6 +650,7 @@ void update_wall_ref_from_log( void )
   }
   L_REF = (short)( sum_l / wall_sample_count );
   R_REF = (short)( sum_r / wall_sample_count );
+  sensor_ref_writeDF();
 }
 //---------------------------------------------------------------
 //  Timer  CMT0 割り込み(200us毎にこの関数が勝手に優先して実行される) [int_timerw]の代わり
@@ -973,6 +980,7 @@ void mode0( int x )
   LCD_print( 8, "        " );
   LCD_dec_out(  8, L_REF, 3 );  // 左センサ値をLCDに表示
   LCD_dec_out( 13, R_REF, 3 );  // 右センサ値をLCDに表示
+  sensor_ref_writeDF();
   pause( 2000 );                // 2秒間表示
 }
 //-------------------------------------------------------------------------
@@ -1450,6 +1458,31 @@ void map_DFread(short no)
     }
   }
 
+}
+
+//-------------------------------------------------------------------------
+//  Sensor reference persistence
+//-------------------------------------------------------------------------
+void sensor_ref_writeDF(void)
+{
+  unsigned short data[64] = {0};
+  data[0] = SENSOR_DATA_MAGIC;
+  data[1] = SENSOR_DATA_VERSION;
+  data[2] = (unsigned short)L_REF;
+  data[3] = (unsigned short)R_REF;
+  data[4] = (unsigned short)F_REF;
+  DFlash_bprog(SDATA_BK, data);
+}
+
+void sensor_ref_readDF(void)
+{
+  unsigned short data[64];
+  DFlash_bread(SDATA_BK, data);
+  if( data[0] != SENSOR_DATA_MAGIC || data[1] != SENSOR_DATA_VERSION )
+    return;
+  L_REF = (short)data[2];
+  R_REF = (short)data[3];
+  F_REF = (short)data[4];
 }
 
 //-------------------------------------------------------------------------
