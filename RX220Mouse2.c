@@ -121,8 +121,8 @@ static const goal_choice_t goal_choices[] = {
 #define   S_MODE      0    // Search Mode : 未探索区間は壁無しとして扱う
 #define   T_MODE      1    // Try Mode    : 未探索区間は壁有りとして扱う
 #define   KBAT_BACK_SPEED 80
-#define   KBAT_HALF_SPEED 80
-#define   KBAT_BACK_STEP  1400
+#define   KBAT_HALF_SPEED 100
+#define   KBAT_BACK_STEP  1000
 #define   KBAT_HALF_STEP  600
 static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // preset target speeds
 #define   GSPEED_LEVELS        ((int)(sizeof(GSSPEED) / sizeof(GSSPEED[0])))
@@ -619,7 +619,7 @@ void load_param( void )
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
   F_LIM   = 150;    // 前 11/6[71-340-925] 100 150
   // 走行パラメータ  // 1-2相励磁
-    GO_STEP   = 1620; // 1区間前進ステップ数  
+    GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
