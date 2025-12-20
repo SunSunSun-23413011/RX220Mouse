@@ -120,6 +120,10 @@ static const goal_choice_t goal_choices[] = {
 // 探索関連
 #define   S_MODE      0    // Search Mode : 未探索区間は壁無しとして扱う
 #define   T_MODE      1    // Try Mode    : 未探索区間は壁有りとして扱う
+#define   KBAT_BACK_SPEED 80
+#define   KBAT_HALF_SPEED 80
+#define   KBAT_BACK_STEP  1400
+#define   KBAT_HALF_STEP  600
 static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // preset target speeds
 #define   GSPEED_LEVELS        ((int)(sizeof(GSSPEED) / sizeof(GSSPEED[0])))
 #define   GSPEED_DEFAULT_INDEX (GSPEED_LEVELS - 1)
@@ -330,6 +334,8 @@ short stepf_l = 1;
 short    STEP;             // モータのステップ数
 short    GO_STEP;          // 1区間のステップ数
 short    TURN_STEP;        // 超信旋回ステップ数
+short    BACK_STEP;        // 1区間の後退ステップ数
+short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
 short GSPEEDvar ;		// 目標速度  -----> これはRX用として残す
 // 探索関連
@@ -375,12 +381,18 @@ void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
 void com_turn( int t_mode );
+void com_back( int n );
+void com_go_half( int n );
+void kbat_r( void );
+void kbat_lf_turn( void );
+void goal_kbat_turn( void );
 void countdown( void );
 void finish( void );
 int get_wall_data( void );
 void clear_map( void );
 void make_map_data( void );
 void make_potential( int gx, int gy, int mode );
+int search_left_hand( void );
 int search_adachi( void );
 void map_writeDF(short);	// MAPデータをDataFlashへ書込み   
 void map_DFread(short);	// MAPデータをDataFlashから読出し   
@@ -609,6 +621,8 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1640; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
+    BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
+    HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
      gspeed_index = GSPEED_DEFAULT_INDEX;
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
   sensor_ref_readDF();
@@ -1314,7 +1328,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
       case  2 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
-                com_turn( 2 );            // 反転
+                kbat_lf_turn();            // 反転
                 head_change = 2;          // 進行方向更新変数を後に設定
                 break;
       // 左折
@@ -1328,8 +1342,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
       case  4 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 //
-                com_turn( 2 );            // 反転
-                com_stop();               // 停止
+                goal_kbat_turn();         // 反転(ゴール壁当て)
                 head_change = 2;          // 進行方向更新変数を後に設定
                 head = ( head + head_change ) & 0x03; // 詳細は下を参照
                 finish();                 // ゴール音
@@ -1405,6 +1418,148 @@ void com_turn( int t_mode )
   speed = 1;          // 最低速度設定
   while( STEP < T_STEP );                       // 残りのステップ数で減速 
 }
+void com_back( int n )
+{
+  control_mode = 0;
+  STEP = 0;
+  rdir = 1; ldir = 1;
+  R_SW = LED_OFF;
+  L_SW = LED_OFF;
+  F_SW = LED_OFF;
+  speed = KBAT_BACK_SPEED;
+  while( speed > speed_now );
+  speed = speed_now;
+  while( STEP < BACK_STEP );
+  speed = 10;
+  while( STEP < BACK_STEP * n );
+  R_SW = LED_ON;
+  L_SW = LED_ON;
+  F_SW = LED_ON;
+}
+
+void com_go_half( int n )
+{
+  control_mode = 0;
+  STEP = 0;
+  rdir = 0; ldir = 0;
+  speed = KBAT_HALF_SPEED;
+  while( speed > speed_now );
+  speed = speed_now;
+  while( STEP < HALF_STEP * n - speed_now * 2 );
+  speed = 1;
+  while( STEP < HALF_STEP * n );
+}
+
+void kbat_r( void )
+{
+  com_stop();
+  com_back( 1 );
+  com_stop();
+  com_go_half( 1 );
+}
+
+void kbat_lf_turn( void )
+{
+  int kabe;
+  kabe = search_left_hand();
+  switch( kabe ){
+    case 0:
+    case 1:
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 0 );
+      break;
+    case 2:
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      break;
+    default :
+      if( F_SEN > F_LIM ){
+        com_turn( 2 );
+        com_stop();
+        com_back( 1 );
+        com_stop();
+        com_go_half( 1 );
+        com_stop();
+      }else{
+        com_turn( 2 );
+      }
+  }
+}
+
+void goal_kbat_turn( void )
+{
+  if( F_SEN > F_LIM ){
+    if( R_SEN > R_LIM ){
+      com_stop();
+      com_turn( 1 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 1 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+    }else if( L_SEN > L_LIM ){
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+    }else{
+      com_turn( 3 );
+      kbat_r();
+    }
+  }else{
+    if( R_SEN > R_LIM ){
+      com_stop();
+      com_turn( 1 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 1 );
+    }else if( L_SEN > L_LIM ){
+      com_stop();
+      com_turn( 0 );
+      com_stop();
+      com_back( 1 );
+      com_stop();
+      com_go_half( 1 );
+      com_stop();
+      com_turn( 0 );
+    }else{
+      com_turn( 3 );
+    }
+  }
+}
+
 //-------------------------------------------------------------------------
 //  カウントダウン 
 //-------------------------------------------------------------------------
@@ -1848,6 +2003,29 @@ void make_potential( int gx, int gy, int mode )
 //-------------------------------------------------------------------------
 //  探索：拡張左手法
 //-------------------------------------------------------------------------
+int search_left_hand( void ){
+  short wall_data, motion;
+
+  wall_data = get_wall_data();  // 壁情報取得
+
+  switch( wall_data ){
+    case  0x00  : motion = 3; break;  // 左に壁なし:左折
+    case  0x01  : motion = 3; break;  // 左に壁なし:左折
+    case  0x02  : motion = 3; break;  // 左に壁なし:左折
+    case  0x03  : motion = 3; break;  // 左に壁なし:左折
+    case  0x04  : motion = 3; break;  // 左に壁なし:左折
+    case  0x05  : motion = 3; break;  // 左に壁なし:左折
+    case  0x06  : motion = 3; break;  // 左に壁なし:左折
+    case  0x07  : motion = 3; break;  // 左に壁なし:左折
+    case  0x08  : motion = 0; break;  // 左に壁,前に壁なし:直進
+    case  0x09  : motion = 1; break;  // 左に壁,前に壁,右に壁なし:右折
+    case  0x0a  : motion = 0; break;  // 左に壁,前に壁なし:直進
+    case  0x0b  : motion = 2; break;  // 左に壁,前に壁,右に壁:反転
+    default     : motion = 4; break;  // 後ろに壁:あり得ないので停止
+  }
+  return( motion );
+}
+
 //-------------------------------------------------------------------------
 //  探索：足立法
 //-------------------------------------------------------------------------
