@@ -89,7 +89,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     10   // 動作モード数
+#define   ModeMax     12   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -352,6 +352,22 @@ uchar    goal_y;           // current goal y coordinate
 short    wall_sample_left[ WALL_SAMPLE_MAX ];
 short    wall_sample_right[ WALL_SAMPLE_MAX ];
 ushort   wall_sample_count;    // ポテンシャルMAPデータ
+typedef struct {
+  char label;
+  short *value;
+  int digits;
+} center_ref_t;
+
+static const center_ref_t center_refs[] = {
+  { 'L', &L_REF, 3 },
+  { 'R', &R_REF, 3 },
+  { 'F', &F_REF, 4 }
+};
+
+#define CENTER_REF_COUNT ((int)(sizeof(center_refs) / sizeof(center_refs[0])))
+#define CENTER_REF_MIN   0
+#define CENTER_REF_MAX   4095
+
 //---------------------------------------------------------------
 //  関数プロトタイプ宣言
 //---------------------------------------------------------------
@@ -377,6 +393,8 @@ void mode6( int x );
 void mode7( int x );
 void mode8( int x );
 void mode9( int x );
+void mode10( int x );
+void mode11( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
@@ -927,6 +945,8 @@ void change_mode( int x )
   else if( MODE == 7 ) mode7( DISP );   // Mode7:
   else if( MODE == 8 ) mode8( DISP );   // Mode8:
   else if( MODE == 9 ) mode9( DISP );   // Mode9:
+  else if( MODE == 10 ) mode10( DISP );   // Mode10:
+  else if( MODE == 11 ) mode11( DISP );   // Mode11:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -944,6 +964,8 @@ void exec_mode( void )
   else if( MODE == 7 ) mode7( EXEC );   // Mode7:
   else if( MODE == 8 ) mode8( EXEC );   // Mode8:
   else if( MODE == 9 ) mode9( EXEC );   // Mode9:
+  else if( MODE == 10 ) mode10( EXEC );   // Mode10:
+  else if( MODE == 11 ) mode11( EXEC );   // Mode11:
 }
 
 //-------------------------------------------------------------------------
@@ -1269,6 +1291,89 @@ void mode9( int x )
     ccnt(0);
     mouse_search( 0, 0, GSPEEDvar, T_MODE );
   }
+}
+
+
+static void render_center_ref_line( int base_pt, const center_ref_t *ref )
+{
+  char line[ 9 ];
+  int i;
+  line[ 0 ] = ref->label;
+  line[ 1 ] = '=';
+  for( i = 2; i < 8; i++ )
+    line[ i ] = ' ';
+  line[ 8 ] = 0;
+  LCD_print( base_pt, line );
+  LCD_dec_out( base_pt + 2, *ref->value, ref->digits );
+}
+
+void mode10( int x )
+{
+  int index = 0;
+  if( x == DISP )
+  {
+    LCD_print( 0, "10:RefCh" );
+    LCD_print( 8, "L R F   " );
+    return;
+  }
+  while( 1 ){
+    const center_ref_t *ref = &center_refs[ index ];
+    LCD_print( 0, "10:RefCh" );
+    render_center_ref_line( 8, ref );
+    if( SW_UP == SW_ON ){
+      index++;
+      if( index >= CENTER_REF_COUNT ) index = 0;
+      WaitKeyOff();
+    }else if( SW_DOWN == SW_ON ){
+      if( index == 0 ) index = CENTER_REF_COUNT - 1;
+      else index--;
+      WaitKeyOff();
+    }else if( SW_EXEC == SW_ON ){
+      WaitKeyOff();
+      return;
+    }else{
+      pause( 100 );
+    }
+  }
+}
+
+void mode11( int x )
+{
+  int index = 0;
+  if( x == DISP )
+  {
+    LCD_print( 0, "11:SetRef" );
+    LCD_print( 8, "+/-Exec " );
+    return;
+  }
+  while( 1 ){
+    const center_ref_t *ref = &center_refs[ index ];
+    LCD_print( 0, "11:SetRef" );
+    render_center_ref_line( 0, ref );
+    LCD_print( 8, "+/-Exec " );
+    if( SW_UP == SW_ON ){
+      int temp = *ref->value + 10;
+      if( temp > CENTER_REF_MAX ) temp = CENTER_REF_MAX;
+      *ref->value = (short)temp;
+      WaitKeyOff();
+    }else if( SW_DOWN == SW_ON ){
+      int temp = *ref->value - 10;
+      if( temp < CENTER_REF_MIN ) temp = CENTER_REF_MIN;
+      *ref->value = (short)temp;
+      WaitKeyOff();
+    }else if( SW_EXEC == SW_ON ){
+      WaitKeyOff();
+      index++;
+      if( index >= CENTER_REF_COUNT )
+        break;
+    }else{
+      pause( 100 );
+    }
+  }
+  sensor_ref_writeDF();
+  LCD_print( 0, "RefSaved" );
+  LCD_print( 8, "        " );
+  pause( 1000 );
 }
 
 //-------------------------------------------------------------------------
