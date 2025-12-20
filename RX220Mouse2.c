@@ -933,23 +933,42 @@ void exec_mode( void )
 }
 
 //-------------------------------------------------------------------------
-//  ModeB1 : モータテスト
+//  ModeB1 : マップ削除
 //-------------------------------------------------------------------------
 void modeB1(int x)
 {
-  if( x == DISP )  // DISPモードの場合
+  int yes = 0;  // 0:No, 1:Yes  (宣言はブロック先頭に置く)
+
+  if( x == DISP )
   {
-    // モード内容表示
     LCD_print( 0, "B1:MPDEL" );
     LCD_print( 8, "        " );
-    return;                     // 以下の実行処理をしないで戻る
+    return;
   }
-  //実行モード
+
+  LCD_print( 0, "B1:MPDEL" );
   LCD_print( 8, "Really? " );
-  while(1){
-    if( SW_EXEC == 0 ) { DFlash_init(); return; }
+
+  while( 1 ){
+    if( yes ) LCD_print( 8, "     Yes" );
+    else      LCD_print( 8, "      No" );
+
+    if( SW_UP == SW_ON ){
+      yes = 1;
+      WaitKeyOff();
+    }else if( SW_DOWN == SW_ON ){
+      yes = 0;
+      WaitKeyOff();
+    }else if( SW_EXEC == SW_ON ){
+      WaitKeyOff();
+      if( yes ){
+        DFlash_init();
+      }
+      return;
+    }
   }
 }
+
 
 //-------------------------------------------------------------------------
 //  Mode0 : センサチェック
@@ -1126,9 +1145,11 @@ void mode5( int x )
   pos_x = 0; pos_y = 0; head = 0;
   ccnt(0);
   mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );
+  DFlash_init();
   map_writeDF(MDATA_BK1);
   ccnt(0);
   mouse_search( 0, 0, GSPEEDvar, S_MODE );
+  DFlash_init();
   map_writeDF(MDATA_BK1);
 }
 
@@ -1219,9 +1240,11 @@ void mode9( int x )
   pos_x = 0; pos_y = 0; head = 0;
   ccnt(0);
   mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );
+  DFlash_init();
   map_writeDF(MDATA_BK1);
   ccnt(0);
   mouse_search( 0, 0, GSPEEDvar, S_MODE );
+  DFlash_init();
   map_writeDF(MDATA_BK1);
 
   map_DFread(MDATA_BK1);
