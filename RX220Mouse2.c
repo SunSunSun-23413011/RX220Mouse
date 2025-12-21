@@ -1278,7 +1278,7 @@ void mode9( int x )
   mouse_search( goal_x, goal_y, GSPEEDvar, S_MODE );
   DFlash_init();
   map_writeDF(MDATA_BK1);
-  ccnt(0);
+  //ccnt(0);
   mouse_search( 0, 0, GSPEEDvar, S_MODE );
   DFlash_init();
   map_writeDF(MDATA_BK1);
@@ -1288,7 +1288,7 @@ void mode9( int x )
   for( round_trip = 0; round_trip < 4; round_trip++ ){
     ccnt(0);
     mouse_search( goal_x, goal_y, GSPEEDvar, T_MODE );
-    ccnt(0);
+    //ccnt(0);
     mouse_search( 0, 0, GSPEEDvar, T_MODE );
   }
 }
