@@ -406,6 +406,7 @@ void kbat_lf_turn( void );
 void goal_kbat_turn( void );
 void countdown( void );
 void finish( void );
+static void start_back_wall_contact( void );
 int get_wall_data( void );
 void clear_map( void );
 void make_map_data( void );
@@ -635,7 +636,7 @@ void load_param( void )
   // 壁の有無判定用しきい値:各センサ壁あり最小値と壁なし値の中間値
   R_LIM   =  150;    // 右 11/6[147-459-537,317] 350
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
-  F_LIM   = 150;    // 前 11/6[71-340-925] 100 150
+  F_LIM   = 170;    // 前 11/6[71-340-925] 100 150
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
@@ -1383,6 +1384,9 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion;
   reset_wall_samples();
+  if( pos_x == 0 && pos_y == 0 ){
+    start_back_wall_contact();
+  }
   //countdown();                  
   // カウントダウン
   while( 1 ){
@@ -1666,6 +1670,15 @@ void goal_kbat_turn( void )
   com_stop();
 }
 
+
+static void start_back_wall_contact( void )
+{
+  com_stop();
+  com_back( 1 );
+  com_stop();
+  com_go_half( 1 );
+  com_stop();
+}
 //-------------------------------------------------------------------------
 //  カウントダウン 
 //-------------------------------------------------------------------------
