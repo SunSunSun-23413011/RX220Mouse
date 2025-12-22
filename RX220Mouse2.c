@@ -89,7 +89,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     12   // 動作モード数
+#define   ModeMax     14   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -334,6 +334,7 @@ short stepf_l = 1;
 short    STEP;             // モータのステップ数
 short    GO_STEP;          // 1区間のステップ数
 short    TURN_STEP;        // 超信旋回ステップ数
+short    SLALOM_STEP;      // Slalom turn step
 short    BACK_STEP;        // 1区間の後退ステップ数
 short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
@@ -395,10 +396,14 @@ void mode8( int x );
 void mode9( int x );
 void mode10( int x );
 void mode11( int x );
+void mode12( int x );
+void mode13( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
+void mouse_slalom_run( int goal_x, int goal_y, int spd );
 void com_go( int n );
 void com_stop( void );
 void com_turn( int t_mode );
+void com_slalom_turn( int t_mode );
 void com_back( int n );
 void com_go_half( int n );
 void kbat_r( void );
@@ -640,6 +645,7 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
+    SLALOM_STEP = TURN_STEP;  // Slalom 90-degree turn
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
      gspeed_index = GSPEED_DEFAULT_INDEX;
@@ -948,6 +954,8 @@ void change_mode( int x )
   else if( MODE == 9 ) mode9( DISP );   // Mode9:
   else if( MODE == 10 ) mode10( DISP );   // Mode10:
   else if( MODE == 11 ) mode11( DISP );   // Mode11:
+  else if( MODE == 12 ) mode12( DISP );   // Mode12:
+  else if( MODE == 13 ) mode13( DISP );   // Mode13:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -967,6 +975,8 @@ void exec_mode( void )
   else if( MODE == 9 ) mode9( EXEC );   // Mode9:
   else if( MODE == 10 ) mode10( EXEC );   // Mode10:
   else if( MODE == 11 ) mode11( EXEC );   // Mode11:
+  else if( MODE == 12 ) mode12( EXEC );   // Mode12:
+  else if( MODE == 13 ) mode13( EXEC );   // Mode13:
 }
 
 //-------------------------------------------------------------------------
@@ -1378,8 +1388,131 @@ void mode11( int x )
 }
 
 //-------------------------------------------------------------------------
+//  Mode12 : Slalom maze run
+//-------------------------------------------------------------------------
+void mode12( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "12:Slalom" );
+    LCD_print( 8, "Spd " );
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;
+  }
+
+  select_gspeed( "12:Slalom" );
+  map_DFread(MDATA_BK1);
+  pos_x = 0; pos_y = 0; head = 0;
+  ccnt(0);
+  mouse_slalom_run( goal_x, goal_y, GSPEEDvar );
+}
+
+//-------------------------------------------------------------------------
+//  Mode13 : Slalom step tuning
+//-------------------------------------------------------------------------
+void mode13( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "13:SlmStep" );
+    LCD_print( 8, "+/-Exec " );
+    return;
+  }
+  while( 1 ){
+    LCD_print( 0, "13:SlmStep" );
+    LCD_print( 8, "+/-Exec " );
+    LCD_dec_out( 12, SLALOM_STEP, 4 );
+    if( SW_UP == SW_ON ){
+      SLALOM_STEP += 10;
+      WaitKeyOff();
+    }else if( SW_DOWN == SW_ON ){
+      SLALOM_STEP -= 10;
+      if( SLALOM_STEP < 10 )
+        SLALOM_STEP = 10;
+      WaitKeyOff();
+    }else if( SW_EXEC == SW_ON ){
+      WaitKeyOff();
+      com_slalom_turn( 0 );
+      com_stop();
+    }else{
+      pause( 100 );
+    }
+  }
+}
+
+//-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+//  Slalom run following stored map
+//-------------------------------------------------------------------------
+void mouse_slalom_run( int goal_x, int goal_y, int spd )
+{
+  short motion;
+
+  while( 1 ){
+    control_mode = 1;
+    rdir = 0; ldir = 0;
+    step_r = 0;
+    step_l = 0;
+    STEP = 0;
+    speed = spd;
+    CPU_LED = 1;
+
+    if     ( head == 0 ) pos_y++;
+    else if( head == 1 ) pos_x++;
+    else if( head == 2 ) pos_y--;
+    else if( head == 3 ) pos_x--;
+
+    make_potential( goal_x, goal_y, T_MODE );
+
+    while( STEP < GO_STEP / 2 );
+
+    motion = search_adachi();
+
+    if( pos_x == goal_x && pos_y == goal_y )
+      motion = 4;
+
+    switch( motion ){
+      case  0 : while( STEP < GO_STEP );
+                head_change = 0;
+                break;
+      case  1 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF );
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF );
+                com_slalom_turn( 0 );
+                head_change = 1;
+                break;
+      case  2 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF );
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF );
+                com_slalom_turn( 2 );
+                head_change = 2;
+                break;
+      case  3 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF );
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF );
+                com_slalom_turn( 1 );
+                head_change = 3;
+                break;
+      case  4 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF );
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF );
+                com_slalom_turn( 2 );
+                head_change = 2;
+                head = ( head + head_change ) & 0x03;
+                finish();
+                return;
+      default : com_stop();
+                head_change = 0;
+                head = ( head + head_change ) & 0x03;
+                return;
+    }
+
+    head = ( head + head_change ) & 0x03;
+  }
+}
+
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion;
@@ -1507,25 +1640,31 @@ void com_stop( void )
 //-------------------------------------------------------------------------
 //  旋回モジュール (0:R90 1:L90 2:R180 3:L180) 
 //-------------------------------------------------------------------------
+static void exec_turn_step( int t_mode, short base_step )
+{
+  short T_STEP = base_step;
+  com_stop();
+  control_mode = 0;
+  if     ( t_mode == 0 ) { rdir = 1; ldir = 0; }
+  else if( t_mode == 1 ) { rdir = 0; ldir = 1; }
+  else if( t_mode == 2 ) { T_STEP *= 2; rdir = 1; ldir = 0; }
+  else if( t_mode == 3 ) { T_STEP *= 2; rdir = 0; ldir = 1; }
+  speed = 100;
+  while( speed > speed_now );
+  speed = speed_now;
+  while( STEP < T_STEP - speed_now * 2 );
+  speed = 1;
+  while( STEP < T_STEP );
+}
+
 void com_turn( int t_mode )
 {
-  short T_STEP;
-  com_stop();                                             // 停止
-  control_mode = 0;                                       // 姿勢制御なし
-  if     ( t_mode == 0 ) { T_STEP = TURN_STEP; rdir = 1; ldir = 0; } // 右９０度
-  else if( t_mode == 1 ) { T_STEP = TURN_STEP; rdir = 0; ldir = 1; } // 左９０度
-  else if( t_mode == 2 ) { T_STEP = TURN_STEP * 2; rdir = 1; ldir = 0; } // 右反転
-  else if( t_mode == 3 ) { T_STEP = TURN_STEP * 2; rdir = 0; ldir = 1; } // 左反転
-  // 加速モード
-  speed = 100;        // 目標速度設定
-  while( speed > speed_now );                   // 目標速度になるまで加速 ★
-  // 定速モード
-  speed = speed_now;  // 加速後の速度
-  while( STEP < T_STEP - speed_now * 2 );       // 減速ステップ数を残して定速移動 
-                                                // 全体ステップ数-減速用ステップ数
-  // 減速モード
-  speed = 1;          // 最低速度設定
-  while( STEP < T_STEP );                       // 残りのステップ数で減速 
+  exec_turn_step( t_mode, TURN_STEP );
+}
+
+void com_slalom_turn( int t_mode )
+{
+  exec_turn_step( t_mode, SLALOM_STEP );
 }
 void com_back( int n )
 {
