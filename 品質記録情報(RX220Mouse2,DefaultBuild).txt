@@ -1,46 +1,13 @@
 品質記録情報
-2025年12月21日 10:26:57
+2025年12月22日 20:44:46
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
-C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(265):W0520326:"inline" is not allowed
-RX220Mouse2.c(276):W0520326:"inline" is not allowed
-RX220Mouse2.c(1151):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1242):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1247):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 23 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 23 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-Renesas Optimizing Linker Completed
------- ビルド終了(エラー:0個, 警告:7個)(RX220Mouse2, DefaultBuild) ------
-
---- CommandFile 1 ---
-DefaultBuild\RX220Mouse2.clnk :
--library=DefaultBuild\RX220Mouse2.lib
--input=DefaultBuild\dbsct.obj
--input=DefaultBuild\intprg.obj
--input=DefaultBuild\resetprg.obj
--input=DefaultBuild\RX220Mouse2.obj
--input=DefaultBuild\sbrk.obj
--input=DefaultBuild\vecttbl.obj
--noprelink
--output=DefaultBuild\RX220Mouse2.abs
--list=DefaultBuild\RX220Mouse2.map
--show=symbol,total_size
--nooptimize
--start=B_1,R_1,B_2,R_2,B,R,SU,SI/04,PResetPRG/0FFFC0000,C_1,C_2,C,C$DSEC,C$BSEC,C$INIT,C$VTBL,C$VECT,D_1,D_2,D,P,PIntPRG,W_1,W_2,W,L/0FFFC0100,FIXEDVECT/0FFFFFFD0
--rom=D=R,D_1=R_1,D_2=R_2
--nologo
--end
--input=DefaultBuild\RX220Mouse2.abs
--output=DefaultBuild\RX220Mouse2.mot
--form=stype
--exit
+------ ビルド終了(エラー:0個, 警告:0個)(RX220Mouse2, DefaultBuild) ------
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 798afc12054dd11b96502a942d3b478b7a2fd3a3
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 72494a361ef68820353de73ad4722b372cd2bba4
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: ceeec7852e5ca7f1b75c9de80350858a02342d0c
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 8dd15526e9ca82ed446236b5e470463b11f814f8
 
 
 --- システム情報 ---
@@ -68,7 +35,7 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 72494a361ef68820353de73ad4722b372cd
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  95 MB
+  99 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数

@@ -512,7 +512,7 @@ void IO_init( void )
     SYSTEM.SCKCR3.WORD = 0x0200;	//大元のクロックをメインクロック(20MHz)を使用
     //クロックの元栓の設定
     SYSTEM.MOSCCR.BYTE = 0;		// メインクロック発振器 動作:0 停止:1
-    SYSTEM.SOSCCR.BYTE = 0;		// サブクロック発振器 動作:0 停止:1
+    SYSTEM.SOSCCR.BYTE = 1;		// サブクロック発振器 動作:0 停止:1
   // ===== I/O ポートの初期化 =====           ピン番号  7654 3210
 //    -------設定まとめた形に----- 7/21
     PORT0.PODR.BYTE=0x00;
