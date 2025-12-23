@@ -84,7 +84,7 @@
     <ToolDisconnectReset>Low</ToolDisconnectReset>
     <ToolResetSignalFlag>09000000</ToolResetSignalFlag>
     <ToolInterface>IFTYPE_UART2</ToolInterface>
-    <ToolSpeed>9600</ToolSpeed>
+    <ToolSpeed>115200</ToolSpeed>
     <ToolWideVoltage>False</ToolWideVoltage>
     <MainClock>32000000</MainClock>
     <AutoAuthen>False</AutoAuthen>
