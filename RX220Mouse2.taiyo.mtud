@@ -7,10 +7,7 @@
   </Class>
   <Class Guid="2c267d36-9968-416b-8f39-cfcf1e069830">
     <Instance Guid="705a6012-3a18-4d01-903f-6c55417f8f3d">
-      <ColumnStates>Header=True,LineEditor=True,SelectionEditor=True,Out of Date Module Indicator=True,Coverage=True,Address=True,Event=True,MainDebug=True,Main=True,OpCode=True,Label=True,</ColumnStates>
-    </Instance>
-    <Instance Guid="9a2aa537-6164-42cd-80e4-e708b32cd890">
-      <Bookmarks>0</Bookmarks>
+      <ColumnStates />
     </Instance>
   </Class>
   <Class Guid="29b411d9-bd89-4bd0-8039-3f500de10677">
@@ -100,16 +97,6 @@
       <ArrayIndexNotation>None</ArrayIndexNotation>
       <IsSymbolShow>False</IsSymbolShow>
       <DisableSorting>False</DisableSorting>
-    </Instance>
-  </Class>
-  <Class Guid="cd02d324-a75c-4e2b-b858-33bd0d529683">
-    <Instance Guid="7f99f0d7-ad41-4e24-b822-a21c2c44cb6d">
-      <Name>PanelIORegister</Name>
-      <WatchExpressionColumnWidth>0</WatchExpressionColumnWidth>
-      <ValueColumnWindth>0</ValueColumnWindth>
-      <TypeColumnWidth>0</TypeColumnWidth>
-      <AddressColumnWidth>0</AddressColumnWidth>
-      <MemoColumnWidth>0</MemoColumnWidth>
     </Instance>
   </Class>
   <Class Guid="9e32877b-f8ee-49c6-a44e-88758c92bfd6">
@@ -726,30 +713,24 @@
   </Class>
   <Class Guid="611ccd33-b851-4726-9e3f-a4209353c34d">
     <Instance Guid="00000000-0000-0000-0000-000000000000">
-      <PanelCount>1</PanelCount>
-      <InstanceGuid0>0932ebf2-4ad5-4b13-9c2f-0abd5338685b</InstanceGuid0>
-      <HelperClassGuid0>e9e5eb74-fd3b-4a6d-9bee-88bf153cb9b0</HelperClassGuid0>
-      <Document.Path0>D:\RX220Mouse2\iodefine.h</Document.Path0>
-      <ProjectItem.InstanceGuid0>17c5632c-ab45-459c-a238-c3630c436e1a</ProjectItem.InstanceGuid0>
-      <IndexId0>0</IndexId0>
-      <ShowIndexId0>False</ShowIndexId0>
-      <IsFloating0>False</IsFloating0>
-      <StatusText0>VerticalSplitPercentage:0.00
-HorizontalSplitPercentage:0.00
-ActiveViewPlacement:Right
-CaretPosition:61,2
-FirstVisiblePosition:Right,59,0
-</StatusText0>
+      <PanelCount>0</PanelCount>
     </Instance>
   </Class>
   <Class Guid="a86d2744-4eb1-43a4-bbcb-1f717558eac6">
     <Instance Guid="a86d2744-4eb1-43a4-bbcb-1f717558eac6">
-      <ExtendedItems>27d3a1f4-16ad-4e6d-bb16-ed30c67cab70
-49b74a54-73e7-4b19-b5a7-7c5b41b8ba40
-</ExtendedItems>
-      <TopItem>27d3a1f4-16ad-4e6d-bb16-ed30c67cab70</TopItem>
+      <ExtendedItems />
       <ViewMode>2</ViewMode>
       <ViewModeToggle>False</ViewModeToggle>
+    </Instance>
+  </Class>
+  <Class Guid="cd02d324-a75c-4e2b-b858-33bd0d529683">
+    <Instance Guid="7f99f0d7-ad41-4e24-b822-a21c2c44cb6d">
+      <Name>PanelIORegister</Name>
+      <WatchExpressionColumnWidth>0</WatchExpressionColumnWidth>
+      <ValueColumnWindth>0</ValueColumnWindth>
+      <TypeColumnWidth>0</TypeColumnWidth>
+      <AddressColumnWidth>0</AddressColumnWidth>
+      <MemoColumnWidth>0</MemoColumnWidth>
     </Instance>
   </Class>
   <Class Guid="84287b3e-7c41-456a-95e9-c7acc8f124ab">

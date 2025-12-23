@@ -48,16 +48,16 @@ void LCD_init( void )
   LCD_com4( 0x02 );   // Function set
   LCD_com4( 0x02 );   // 
   LCD_com4( 0x08 );   // 2lines, 5*7dots
-  LCD_wait(  100 );   // 39us wait (適当)
+  LCD_wait(  39 );   // 39us wait (適当)
   LCD_com4( 0x00 );   // Display ON/OFF Control
   LCD_com4( 0x0c );   //   Disp on, Cursor off, Brink off
-  LCD_wait(  100 );   // 39us wait (適当)
+  LCD_wait(  39 );   // 39us wait (適当)
   LCD_com4( 0x00 );   // Display Clear
   LCD_com4( 0x01 );   //
-  LCD_wait( 10000 );  // 1.53ms wait (適当)
+  LCD_wait( 15300 );  // 1.53ms wait (適当)
   LCD_com4( 0x00 );   // Entry Mode Set
   LCD_com4( 0x06 );   //   Increment, not shifted
-  LCD_wait( 10000 );  // 追加 init直後に一文字目が出なかった 7/1
+  LCD_wait( 30000 );  // 追加 init直後に一文字目が出なかった 7/1
 
   LCD_clear();  // LCD Clear
   LCD_FLAG = 1; // LCDの表示を許可
@@ -172,6 +172,6 @@ void LCD_wait( int n )
 {
   volatile int x;
   for( x = 0; x < n; x++ );
-//  for( x = 0; x < n; x++ );     // 7/1 特に長くしなくても表示した
+  for( x = 0; x < n; x++ );   
 }
 

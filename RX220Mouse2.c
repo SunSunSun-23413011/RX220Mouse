@@ -455,7 +455,6 @@ static void advance_goal_choice( int delta )
 void main(void)
 {
   IO_init();    // IOの初期化
-  LCD_init();   // LCDの初期化
   CPU_LED = 1;  // CPU層LEDを消灯 赤
   LED = LED_OFF;                        // LEDを消灯
   MOTOR_EN =0;  // モータOFF
@@ -464,6 +463,8 @@ void main(void)
   beep( BEEP_G5, 150 );
   beep( BEEP_C5, 150 );
   beep( BEEP_G5, 150 );
+  // LCD初期化と表示
+  LCD_init();   // LCDの初期化
   // タイトル表示
   LCD_print( 0, "LE-S200P" );
   // 電圧表示
