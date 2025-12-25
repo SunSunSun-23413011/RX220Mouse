@@ -330,11 +330,18 @@ volatile unsigned int step_r;		//右モータ用
 volatile unsigned int step_l;			//左モータ用
 short stepf_r = 1;
 short stepf_l = 1;
+volatile uchar motor_enable_l = 1;      // left motor pulse enable
+
+volatile uchar motor_enable_r = 1;      // right motor pulse enable
+
 // 走行関連
 short    STEP;             // モータのステップ数
 short    GO_STEP;          // 1区間のステップ数
 short    TURN_STEP;        // 超信旋回ステップ数
-short    SLALOM_STEP;      // Slalom turn step
+short    SLALOM_STEP_LEFT;  // slalom step count for left motor
+
+short    SLALOM_STEP_RIGHT; // slalom step count for right motor
+
 short    BACK_STEP;        // 1区間の後退ステップ数
 short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
@@ -646,7 +653,10 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
-    SLALOM_STEP = TURN_STEP;  // Slalom 90-degree turn
+    SLALOM_STEP_LEFT = TURN_STEP;  // Slalom 90-degree turn
+
+    SLALOM_STEP_RIGHT = TURN_STEP; // Slalom 90-degree turn
+
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
      gspeed_index = GSPEED_DEFAULT_INDEX;
@@ -702,7 +712,7 @@ void timerc_200us( void )
   ushort acc_num, lspeed, rspeed;
   // 左モータ割り込み
     MTU3.TGRC = timerL;                     // 次の速度をセット
-    if( speed != 0 ){ 
+    if( speed != 0 && motor_enable_l ){ 
 	MTU.TSTR.BIT.CST3 = 1;	//カウントスタート
     }else{      // 停止ならパルスをださない
 	MTU.TSTR.BIT.CST3 = 0;	//タイマストップ
@@ -712,7 +722,7 @@ void timerc_200us( void )
     }
   // 右モータ割り込み
     MTU4.TGRC = timerR;                     // 次の速度をセット
-    if( speed != 0 ){ 
+    if( speed != 0 && motor_enable_r ){ 
 	MTU.TSTR.BIT.CST4 = 1;	//カウントスタート
     }else{      // 停止ならパルスをださない
 	MTU.TSTR.BIT.CST4 = 0;	//タイマストップ
@@ -1413,28 +1423,51 @@ void mode12( int x )
 //-------------------------------------------------------------------------
 void mode13( int x )
 {
+  int selection = 0;
   if( x == DISP )
   {
-    LCD_print( 0, "13:SlmStep" );
-    LCD_print( 8, "+/-Exec " );
+    LCD_print( 0,  "13:SlmStep" );
+    LCD_print( 8, "+/-Exec  " );
     return;
   }
+
   while( 1 ){
     LCD_print( 0, "13:SlmStep" );
-    LCD_print( 8, "+/-Exec " );
-    LCD_dec_out( 12, SLALOM_STEP, 4 );
+    LCD_print( 8, selection == 0 ? "R> Exec" : "L> Exec" );
+    LCD_print( 2, "R: " );
+    LCD_dec_out( 4, SLALOM_STEP_RIGHT, 4 );
+    LCD_print( 10, "L: " );
+    LCD_dec_out( 12, SLALOM_STEP_LEFT, 4 );
     if( SW_UP == SW_ON ){
-      SLALOM_STEP += 10;
+      if( selection == 0 )
+        SLALOM_STEP_RIGHT += 10;
+      else
+        SLALOM_STEP_LEFT += 10;
       WaitKeyOff();
     }else if( SW_DOWN == SW_ON ){
-      SLALOM_STEP -= 10;
-      if( SLALOM_STEP < 10 )
-        SLALOM_STEP = 10;
+      if( selection == 0 ){
+        SLALOM_STEP_RIGHT -= 10;
+        if( SLALOM_STEP_RIGHT < 10 )
+          SLALOM_STEP_RIGHT = 10;
+      }else{
+        SLALOM_STEP_LEFT -= 10;
+        if( SLALOM_STEP_LEFT < 10 )
+          SLALOM_STEP_LEFT = 10;
+      }
       WaitKeyOff();
     }else if( SW_EXEC == SW_ON ){
+      int hold = 0;
+      while( SW_EXEC == SW_ON ){
+        pause( 50 );
+        hold++;
+      }
+      if( hold >= 10 ){
+        com_slalom_turn( selection == 0 ? 0 : 1 );
+        com_stop();
+      }else{
+        selection ^= 1;
+      }
       WaitKeyOff();
-      com_slalom_turn( 0 );
-      com_stop();
     }else{
       pause( 100 );
     }
@@ -1658,15 +1691,75 @@ static void exec_turn_step( int t_mode, short base_step )
   while( STEP < T_STEP );
 }
 
+
+
+static inline void update_slalom_motor_enable( unsigned int left_target, unsigned int right_target )
+{
+  if( motor_enable_l != 0 && step_l >= left_target )
+    motor_enable_l = 0;
+  if( motor_enable_r != 0 && step_r >= right_target )
+    motor_enable_r = 0;
+}
+
+
+
+static void exec_slalom_turn_per_motor( int t_mode, short left_step_base, short right_step_base )
+{
+  unsigned int left_target = (unsigned int)left_step_base;
+  unsigned int right_target = (unsigned int)right_step_base;
+  unsigned int rotate_factor = ( t_mode == 2 || t_mode == 3 ) ? 2 : 1;
+  unsigned int max_target = left_target > right_target ? left_target : right_target;
+  int accel_threshold = (int)max_target - speed_now * 2;
+  left_target *= rotate_factor;
+  right_target *= rotate_factor;
+  com_stop();
+  control_mode = 0;
+  step_r = 0;
+  step_l = 0;
+  STEP = 0;
+  motor_enable_l = 1;
+  motor_enable_r = 1;
+  if( t_mode == 0 || t_mode == 2 ){
+    rdir = 1; ldir = 0;
+  }else if( t_mode == 1 || t_mode == 3 ){
+    rdir = 0; ldir = 1;
+  }else{
+    rdir = 1; ldir = 0;
+  }
+  speed = 100;
+  while( speed > speed_now );
+  speed = speed_now;
+  update_slalom_motor_enable( left_target, right_target );
+  if( accel_threshold < 0 ) accel_threshold = 0;
+  while( STEP < accel_threshold ){
+    update_slalom_motor_enable( left_target, right_target );
+    if( motor_enable_l == 0 && motor_enable_r == 0 )
+      break;
+  }
+  speed = 1;
+  while( STEP < (int)max_target ){
+    update_slalom_motor_enable( left_target, right_target );
+    if( motor_enable_l == 0 && motor_enable_r == 0 )
+      break;
+  }
+  update_slalom_motor_enable( left_target, right_target );
+  speed = 0;
+  com_stop();
+}
+
 void com_turn( int t_mode )
 {
   exec_turn_step( t_mode, TURN_STEP );
 }
 
 void com_slalom_turn( int t_mode )
+
 {
-  exec_turn_step( t_mode, SLALOM_STEP );
+
+  exec_slalom_turn_per_motor( t_mode, SLALOM_STEP_LEFT, SLALOM_STEP_RIGHT );
+
 }
+
 void com_back( int n )
 {
   control_mode = 0;
