@@ -140,7 +140,7 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define SENSOR_DATA_MAGIC 0xA5A5  // sensor reference validity marker
 #define SENSOR_DATA_VERSION 0x0001 // format version for sensor data
 #define SLALOM_DATA_MAGIC 0x5A5A  // slalom step validity marker
-#define SLALOM_DATA_VERSION 0x0001 // format version for slalom step data
+#define SLALOM_DATA_VERSION 0x0002 // format version for slalom step data
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -343,6 +343,8 @@ short    BACK_STEP;        // 1区間の後退ステップ数
 short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
 short GSPEEDvar ;		// 目標速度  -----> これはRX用として残す
+static short slalom_step_in_table[ GSPEED_LEVELS ];
+static short slalom_step_out_table[ GSPEED_LEVELS ];
 // 探索関連
 uchar    head;             // マウスの進行方向 0:北 1:東 2:南 3:西
 uchar    head_change;      // 進行方向更新用変数 0:前 1:右 2:後 3:左
@@ -440,6 +442,8 @@ void DFlash_bprog(unsigned short ,unsigned short *);    // DataFlash??????1?u???
 void reset_wall_samples( void );
 void log_wall_samples( void );
 void update_wall_ref_from_log( void );
+static void set_slalom_steps_for_speed( int index );
+static void store_slalom_steps_for_speed( int index );
 static void set_goal_choice_index( int index )
 {
   if( index < 0 )
@@ -640,6 +644,7 @@ void IO_init( void )
 //---------------------------------------------------------------
 void load_param( void ) 
 {
+  int i;
   // センサしきい値の決め打ち
   R_REF   = 490;    // 区画中央での右センサ値 11/6[147-459-537,317] 400
   L_REF   = 640;    // 区画中央での左センサ値 11/6[387-612-587,478] 550
@@ -655,9 +660,14 @@ void load_param( void )
     SLALOM_STEP_OUT = 290; // スラローム旋回ステップ
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
+    for( i = 0; i < GSPEED_LEVELS; i++ ){
+      slalom_step_in_table[ i ] = SLALOM_STEP_IN;
+      slalom_step_out_table[ i ] = SLALOM_STEP_OUT;
+    }
      gspeed_index = GSPEED_DEFAULT_INDEX;
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
   slalom_step_readDF();
+  set_slalom_steps_for_speed( gspeed_index );
   sensor_ref_readDF();
 }
 //---------------------------------------------------------------
@@ -1156,6 +1166,22 @@ void mode4( int x )
 }
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
+static void set_slalom_steps_for_speed( int index )
+{
+  if( index < 0 || index >= GSPEED_LEVELS )
+    return;
+  SLALOM_STEP_IN = slalom_step_in_table[ index ];
+  SLALOM_STEP_OUT = slalom_step_out_table[ index ];
+}
+
+static void store_slalom_steps_for_speed( int index )
+{
+  if( index < 0 || index >= GSPEED_LEVELS )
+    return;
+  slalom_step_in_table[ index ] = SLALOM_STEP_IN;
+  slalom_step_out_table[ index ] = SLALOM_STEP_OUT;
+}
+
 //  Speed selection helpers
 //-------------------------------------------------------------------------
 static void update_gspeed_index( int delta )
@@ -1168,6 +1194,7 @@ static void update_gspeed_index( int delta )
     else gspeed_index--;
   }
   GSPEEDvar = GSSPEED[ gspeed_index ];
+  set_slalom_steps_for_speed( gspeed_index );
 }
 static void select_gspeed( const char *title )
 {
@@ -1407,33 +1434,36 @@ void mode11( int x )
 //  Mode12 : 180ターンR
 //-------------------------------------------------------------------------
 void mode12( int x ){
-  if( x == DISP )  // DISPモードの場合
+  if( x == DISP )  // DISP??????
   {
-    // モード内容表示
+    // ???????
     LCD_print( 0, "12:SLSTEP" );
-    LCD_print( 8, "        " );
-    return;                     // 以下の実行処理をしないで戻る
+    LCD_print( 8, "Spd     " );
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;                     // ??????????????
   }
-  // 実行モードの場合
+  select_gspeed( "12:SLSTEP" );
+  // ????????
   while(1){
     while(1){
       LCD_dec_out( 10, SLALOM_STEP_IN, 4 );
       if( SW_UP   == 0 ) { SLALOM_STEP_IN += 10; WaitKeyOff(); }
       if( SW_DOWN == 0 && SLALOM_STEP_IN > 9 ) { SLALOM_STEP_IN -= 10; WaitKeyOff(); }
+      store_slalom_steps_for_speed( gspeed_index );
       if( SW_EXEC == 0 ) { WaitKeyOff(); break;}
     }
     while(1){
       LCD_dec_out( 10, SLALOM_STEP_OUT, 4 );
       if( SW_UP   == 0 ) { SLALOM_STEP_OUT += 10; WaitKeyOff(); }
       if( SW_DOWN == 0 && SLALOM_STEP_OUT > 9 ) { SLALOM_STEP_OUT -= 10; WaitKeyOff(); }
+      store_slalom_steps_for_speed( gspeed_index );
       if( SW_EXEC == 0 ) { slalom_step_writeDF(); com_slalom_turn(0); com_stop();break; }
     }
   }
 }
 
-
 //-------------------------------------------------------------------------
-//  Mode13 : スラローム二次走行
+//  Mode13 : ?????????
 //-------------------------------------------------------------------------
 void mode13( int x )
 {
@@ -1982,25 +2012,48 @@ void sensor_ref_readDF(void)
 void slalom_step_writeDF(void)
 {
   unsigned short data[64] = {0};
+  int i;
   data[0] = SLALOM_DATA_MAGIC;
   data[1] = SLALOM_DATA_VERSION;
-  data[2] = (unsigned short)SLALOM_STEP_IN;
-  data[3] = (unsigned short)SLALOM_STEP_OUT;
+  data[2] = (unsigned short)GSPEED_LEVELS;
+  for( i = 0; i < GSPEED_LEVELS; i++ ){
+    data[3 + (i * 2)] = (unsigned short)slalom_step_in_table[ i ];
+    data[4 + (i * 2)] = (unsigned short)slalom_step_out_table[ i ];
+  }
   DFlash_bprog(SLALOMDATA_BK, data);
 }
 
 void slalom_step_readDF(void)
 {
   unsigned short data[64];
+  int i;
   DFlash_bread(SLALOMDATA_BK, data);
-  if( data[0] != SLALOM_DATA_MAGIC || data[1] != SLALOM_DATA_VERSION )
+  if( data[0] != SLALOM_DATA_MAGIC )
     return;
-  SLALOM_STEP_IN = (short)data[2];
-  SLALOM_STEP_OUT = (short)data[3];
+  if( data[1] == 0x0001 ){
+    short in_val = (short)data[2];
+    short out_val = (short)data[3];
+    for( i = 0; i < GSPEED_LEVELS; i++ ){
+      slalom_step_in_table[ i ] = in_val;
+      slalom_step_out_table[ i ] = out_val;
+    }
+    return;
+  }
+  if( data[1] != SLALOM_DATA_VERSION )
+    return;
+  {
+    int count = (int)data[2];
+    if( count < 0 ) count = 0;
+    if( count > GSPEED_LEVELS ) count = GSPEED_LEVELS;
+    for( i = 0; i < count; i++ ){
+      slalom_step_in_table[ i ] = (short)data[3 + (i * 2)];
+      slalom_step_out_table[ i ] = (short)data[4 + (i * 2)];
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
-//  FCUをリセット  1/30
+//  FCU?????  1/30
 //-------------------------------------------------------------------------
 void fcu_reset(void) 
 {
