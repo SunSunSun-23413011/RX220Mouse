@@ -1,15 +1,15 @@
 品質記録情報
-2026年1月7日 17:06:00
+2026年1月7日 18:04:39
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
 RX220Mouse2.c(268):W0520326:"inline" is not allowed
 RX220Mouse2.c(279):W0520326:"inline" is not allowed
-RX220Mouse2.c(1193):W0520159:Declaration is incompatible with previous "gspeed_index_for_value" (declared at line 667)
-RX220Mouse2.c(1193):W0520172:External/internal linkage conflict with previous declaration
-RX220Mouse2.c(1220):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1311):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1316):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1206):W0520159:Declaration is incompatible with previous "gspeed_index_for_value" (declared at line 670)
+RX220Mouse2.c(1206):W0520172:External/internal linkage conflict with previous declaration
+RX220Mouse2.c(1233):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1324):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1329):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 6 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 6 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
@@ -41,8 +41,8 @@ DefaultBuild\RX220Mouse2.clnk :
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 9beba1c2649c09eea049a4018d975d3af692c9d1
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 6a97e2d912c52e532e49b854eef3217da9b053f6
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: ac721ea8cc109992c09f6deecd46b7885dd67394
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: d9675c01a2e0189a7c3ad2450e01805461f1ce58
 
 
 --- システム情報 ---
@@ -70,11 +70,11 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 6a97e2d912c52e532e49b854eef3217da9b
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  99 MB
+  96 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
-  712
+  715
  *開いているファイル
   0 editors, 0 files, 0 KB
 
