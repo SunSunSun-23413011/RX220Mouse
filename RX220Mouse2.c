@@ -1463,7 +1463,7 @@ void mode12( int x ){
 }
 
 //-------------------------------------------------------------------------
-//  Mode13 : ?????????
+//  Mode13 : ÉXÉâÉçÅ[ÉÄëñçs
 //-------------------------------------------------------------------------
 void mode13( int x )
 {
@@ -1475,7 +1475,8 @@ void mode13( int x )
     return;
   }
 
-  select_gspeed( "6:Try   " );
+  select_gspeed( "13:Try   " );
+  set_slalom_steps_for_speed(gspeed_index);
   map_DFread(MDATA_BK1);
   pos_x = 0; pos_y = 0; head = 0;
   ccnt(0);
