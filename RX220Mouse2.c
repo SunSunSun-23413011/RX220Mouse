@@ -89,7 +89,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     12   // 動作モード数
+#define   ModeMax     13   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -133,11 +133,14 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define CLOCK            20     // クロックソースの選択 に合わせること [MHz]
 #define FDATA_A			(0x0100000)	//データフラッシュの先頭
 #define SDATA_BK	0	//センサーデータ保存用ブロック(0~1)
+#define SLALOMDATA_BK 1   // ??????????????
 #define MDATA_BK1	2	//データフラッシュマップ保存用ブロック1(2~3)
 #define MDATA_BK2	4	//データフラッシュマップ保存用ブロック2(4~5)
 
 #define SENSOR_DATA_MAGIC 0xA5A5  // sensor reference validity marker
 #define SENSOR_DATA_VERSION 0x0001 // format version for sensor data
+#define SLALOM_DATA_MAGIC 0x5A5A  // slalom step validity marker
+#define SLALOM_DATA_VERSION 0x0001 // format version for slalom step data
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -334,6 +337,8 @@ short stepf_l = 1;
 short    STEP;             // モータのステップ数
 short    GO_STEP;          // 1区間のステップ数
 short    TURN_STEP;        // 超信旋回ステップ数
+short    SLALOM_STEP_IN;   // スラローム旋回ステップ数（内側）
+short    SLALOM_STEP_OUT;  // スラローム旋回ステップ数（外側）
 short    BACK_STEP;        // 1区間の後退ステップ数
 short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
@@ -395,10 +400,12 @@ void mode8( int x );
 void mode9( int x );
 void mode10( int x );
 void mode11( int x );
+void mode12( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
 void com_turn( int t_mode );
+void com_slalom_turn( int t_mode );
 void com_back( int n );
 void com_go_half( int n );
 void kbat_r( void );
@@ -417,6 +424,8 @@ void map_writeDF(short);	// MAPデータをDataFlashへ書込み
 void map_DFread(short);	// MAPデータをDataFlashから読出し   
 void sensor_ref_writeDF(void);	// store sensor reference data in DataFlash
 void sensor_ref_readDF(void);	// load sensor references from DataFlash
+void slalom_step_writeDF(void);	// store slalom step data in DataFlash
+void slalom_step_readDF(void);	// load slalom step data from DataFlash
 void fcu_reset(void);		// FCUをリセット 
 void fcu_tope(void) ;		//  FCUをP/Eモードにする  
 void fcu_toread(void);		//  FCUを読み込みモードにする  
@@ -640,10 +649,13 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
+    SLALOM_STEP_IN = 200;  // スラローム旋回ステップ数（内側）
+    SLALOM_STEP_OUT = 290; // スラローム旋回ステップ
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
      gspeed_index = GSPEED_DEFAULT_INDEX;
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
+  slalom_step_readDF();
   sensor_ref_readDF();
 }
 //---------------------------------------------------------------
@@ -754,6 +766,14 @@ void timerc_200us( void )
         // 偏差を用いて補正
           lspeed = acc_num + err_l;    // ここをどうするかはテストが必要 7/14
           rspeed = acc_num + err_r;   // 
+      }else if( control_mode == 2 ){//右旋回スラローム
+        // 偏差を用いて補正
+          lspeed = acc_num;
+          rspeed = 100;   // 
+      }else if( control_mode == 3 ){//左旋回スラローム
+        // 偏差を用いて補正
+          rspeed = acc_num;
+          lspeed = 100;   // 
       }else{  // control_mode = 0 
         lspeed = acc_num ;
         rspeed = acc_num ;
@@ -933,7 +953,7 @@ void ccnt( int x )
 void change_mode( int x )
 {
   MODE += x;                            // モード更新
-  if( MODE >= ModeMax ) MODE = 0;       // モードが超えている場合は0に戻す
+  if( MODE >= ModeMax ) MODE = -1;       // モードが超えている場合は0に戻す
   if( MODE < -1 )  MODE = ModeMax - 1;   // モードが負の場合はモードを最大値に設定
   if     ( MODE == -1) modeB1( DISP );
   else if( MODE == 0 ) mode0( DISP );   // Mode0:
@@ -948,6 +968,7 @@ void change_mode( int x )
   else if( MODE == 9 ) mode9( DISP );   // Mode9:
   else if( MODE == 10 ) mode10( DISP );   // Mode10:
   else if( MODE == 11 ) mode11( DISP );   // Mode11:
+  else if( MODE == 12 ) mode12( DISP );   // Mode12:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -967,6 +988,7 @@ void exec_mode( void )
   else if( MODE == 9 ) mode9( EXEC );   // Mode9:
   else if( MODE == 10 ) mode10( EXEC );   // Mode10:
   else if( MODE == 11 ) mode11( EXEC );   // Mode11:
+  else if( MODE == 12 ) mode12( EXEC );   // Mode12:
 }
 
 //-------------------------------------------------------------------------
@@ -1378,6 +1400,33 @@ void mode11( int x )
 }
 
 //-------------------------------------------------------------------------
+//  Mode12 : 180ターンR
+//-------------------------------------------------------------------------
+void mode12( int x ){
+  if( x == DISP )  // DISPモードの場合
+  {
+    // モード内容表示
+    LCD_print( 0, "12:SLSTEP" );
+    LCD_print( 8, "        " );
+    return;                     // 以下の実行処理をしないで戻る
+  }
+  // 実行モードの場合
+  while(1){
+    while(1){
+      LCD_dec_out( 10, SLALOM_STEP_IN, 4 );
+      if( SW_UP   == 0 ) { SLALOM_STEP_IN += 10; WaitKeyOff(); }
+      if( SW_DOWN == 0 && SLALOM_STEP_IN > 9 ) { SLALOM_STEP_IN -= 10; WaitKeyOff(); }
+      if( SW_EXEC == 0 ) { WaitKeyOff(); break;}
+    }
+    while(1){
+      LCD_dec_out( 10, SLALOM_STEP_OUT, 4 );
+      if( SW_UP   == 0 ) { SLALOM_STEP_OUT += 10; WaitKeyOff(); }
+      if( SW_DOWN == 0 && SLALOM_STEP_OUT > 9 ) { SLALOM_STEP_OUT -= 10; WaitKeyOff(); }
+      if( SW_EXEC == 0 ) { slalom_step_writeDF(); com_slalom_turn(0); com_stop();break; }
+    }
+  }
+}
+//-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
 //-------------------------------------------------------------------------
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
@@ -1527,6 +1576,35 @@ void com_turn( int t_mode )
   speed = 1;          // 最低速度設定
   while( STEP < T_STEP );                       // 残りのステップ数で減速 
 }
+
+//-------------------------------------------------------------------------
+//  スラロームモジュール (0:R90 1:L90 2:R180 3:L180) 
+//-------------------------------------------------------------------------
+void com_slalom_turn( int t_mode ){
+  control_mode = 0;                       // 姿勢制御無し
+  step_r = 0;                               //右ステップ数をリセット
+  step_l = 0;                               //左ステップ数をリセット
+  STEP = 0;                               // 距離カウンタクリア
+  rdir = 0; ldir = 0;                     // 回転方向を直進
+  if( t_mode == 0 ) {
+    speed = 100;
+    while( speed > speed_now );
+    speed = speed_now;
+    while( step_r < SLALOM_STEP_IN);
+    control_mode = 2;           // スラローム用姿勢制御
+    while( step_l < SLALOM_STEP_OUT );
+  }
+  else if( t_mode == 1 ) {
+    speed = 100;
+    while( speed > speed_now );
+    speed = speed_now;
+    while( step_l < SLALOM_STEP_IN);
+    control_mode = 3;           // スラローム用姿勢制御
+    while( step_r < SLALOM_STEP_OUT ); }
+  //else if( t_mode == 2 ) { T_STEP *= 2; rdir = 1; ldir = 0; }
+  //else if( t_mode == 3 ) { T_STEP *= 2; rdir = 0; ldir = 1; }
+}
+
 void com_back( int n )
 {
   control_mode = 0;
@@ -1780,6 +1858,29 @@ void sensor_ref_readDF(void)
   L_REF = (short)data[2];
   R_REF = (short)data[3];
   F_REF = (short)data[4];
+}
+
+//-------------------------------------------------------------------------
+//  Slalom step persistence
+//-------------------------------------------------------------------------
+void slalom_step_writeDF(void)
+{
+  unsigned short data[64] = {0};
+  data[0] = SLALOM_DATA_MAGIC;
+  data[1] = SLALOM_DATA_VERSION;
+  data[2] = (unsigned short)SLALOM_STEP_IN;
+  data[3] = (unsigned short)SLALOM_STEP_OUT;
+  DFlash_bprog(SLALOMDATA_BK, data);
+}
+
+void slalom_step_readDF(void)
+{
+  unsigned short data[64];
+  DFlash_bread(SLALOMDATA_BK, data);
+  if( data[0] != SLALOM_DATA_MAGIC || data[1] != SLALOM_DATA_VERSION )
+    return;
+  SLALOM_STEP_IN = (short)data[2];
+  SLALOM_STEP_OUT = (short)data[3];
 }
 
 //-------------------------------------------------------------------------
