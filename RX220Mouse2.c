@@ -1582,28 +1582,28 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
                 head_change = 0;          // 進行方向更新変数を前に設定
                 break;
       // 右折
-      case  1 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  1 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
                 com_turn( 0 );            // 右90度旋回
                 head_change = 1;          // 進行方向更新変数を右に設定
                 break;
       // 反転
-      case  2 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  2 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
                 kbat_lf_turn();            // 反転
                 head_change = 2;          // 進行方向更新変数を後に設定
                 break;
       // 左折
-      case  3 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  3 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
                 com_turn( 1 );            // 左90度旋回
                 head_change = 3;          // 進行方向更新変数を左に設定
                 break;
       // 反転停止
-      case  4 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  4 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 //
                 goal_kbat_turn();         // 反転(ゴール壁当て)
@@ -1685,7 +1685,7 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
                 head_change = 1;          // 進行方向更新変数を右に設定
                 break;
       // 反転
-      case  2 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  2 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
                 kbat_lf_turn();            // 反転
@@ -1696,7 +1696,7 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
                 head_change = 3;          // 進行方向更新変数を左に設定
                 break;
       // 反転停止
-      case  4 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+      case  4 : while( STEP < GO_STEP - speed_now * speed_now / 300 && F_SEN < F_REF);  // 減速域を残して直進 
                 speed = 1;
                 while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 //
                 goal_kbat_turn();         // 反転(ゴール壁当て)
