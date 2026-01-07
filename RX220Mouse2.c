@@ -1501,7 +1501,7 @@ void mode12( int x ){
         step_l = 0;
         STEP = 0;
         speed = GSPEEDvar;
-        while( STEP < GO_STEP / 2 );
+        while( STEP < GO_STEP / 2 - GSPEEDvar );
         com_slalom_turn(0);
         com_stop();
         break;
@@ -1660,7 +1660,7 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
 
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
-      while( STEP < GO_STEP * 3 / 8 );  // 少し進む
+      while( STEP < GO_STEP / 2 - GSPEEDvar );  // 少し進む
     }else{
       while( STEP < GO_STEP / 2 );  // 半区間進む 
     }
