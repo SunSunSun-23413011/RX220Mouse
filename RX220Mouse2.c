@@ -136,11 +136,14 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define SLALOMDATA_BK 1   // ??????????????
 #define MDATA_BK1	2	//データフラッシュマップ保存用ブロック1(2~3)
 #define MDATA_BK2	4	//データフラッシュマップ保存用ブロック2(4~5)
+#define GOALDATA_BK 6    // ????????????
 
 #define SENSOR_DATA_MAGIC 0xA5A5  // sensor reference validity marker
 #define SENSOR_DATA_VERSION 0x0001 // format version for sensor data
 #define SLALOM_DATA_MAGIC 0x5A5A  // slalom step validity marker
 #define SLALOM_DATA_VERSION 0x0003 // format version for slalom step data
+#define GOAL_DATA_MAGIC 0xC33C    // goal selection validity marker
+#define GOAL_DATA_VERSION 0x0001  // format version for goal selection
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -432,6 +435,8 @@ void sensor_ref_writeDF(void);	// store sensor reference data in DataFlash
 void sensor_ref_readDF(void);	// load sensor references from DataFlash
 void slalom_step_writeDF(void);	// store slalom step data in DataFlash
 void slalom_step_readDF(void);	// load slalom step data from DataFlash
+void goal_choice_writeDF(void);	// store goal selection in DataFlash
+void goal_choice_readDF(void);	// load goal selection from DataFlash
 void fcu_reset(void);		// FCUをリセット 
 void fcu_tope(void) ;		//  FCUをP/Eモードにする  
 void fcu_toread(void);		//  FCUを読み込みモードにする  
@@ -686,6 +691,7 @@ void load_param( void )
   slalom_step_readDF();
   set_slalom_steps_for_speed( gspeed_index );
   sensor_ref_readDF();
+  goal_choice_readDF();
 }
 //---------------------------------------------------------------
 //  センサ中央値更新
@@ -1335,6 +1341,7 @@ void mode8( int x )
       WaitKeyOff();
     }else if( SW_EXEC == 0 ){
       WaitKeyOff();
+      goal_choice_writeDF();
       beep( BEEP_C5, 150 );
       return;
     }
@@ -2108,6 +2115,31 @@ void slalom_step_readDF(void)
   }
 }
 
+
+//-------------------------------------------------------------------------
+//  Goal selection persistence
+//-------------------------------------------------------------------------
+void goal_choice_writeDF(void)
+{
+  unsigned short data[64] = {0};
+  data[0] = GOAL_DATA_MAGIC;
+  data[1] = GOAL_DATA_VERSION;
+  data[2] = (unsigned short)goal_choice_index;
+  data[3] = (unsigned short)goal_x;
+  data[4] = (unsigned short)goal_y;
+  DFlash_bprog(GOALDATA_BK, data);
+}
+
+void goal_choice_readDF(void)
+{
+  unsigned short data[64];
+  DFlash_bread(GOALDATA_BK, data);
+  if( data[0] != GOAL_DATA_MAGIC || data[1] != GOAL_DATA_VERSION )
+    return;
+  if( data[2] >= GOAL_CHOICE_COUNT )
+    return;
+  set_goal_choice_index( (int)data[2] );
+}
 //-------------------------------------------------------------------------
 //  FCUリセット  1/30
 //-------------------------------------------------------------------------
