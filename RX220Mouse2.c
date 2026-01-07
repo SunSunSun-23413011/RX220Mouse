@@ -670,10 +670,10 @@ void load_param( void )
     for( i = gspeed_index_for_value(500); i < GSPEED_LEVELS; i++ ){
       slalom_inner_speed_table[ i ] = 130; // 速度500以上は130に固定
     }
-    slalom_step_in_table[gspeed_index_for_value(300)] = 50;  // 速度300用
-    slalom_step_out_table[gspeed_index_for_value(300)] = 90; // 速度300用
-    slalom_step_in_table[gspeed_index_for_value(400)] = 10;  // 速度400用
-    slalom_step_out_table[gspeed_index_for_value(400)] = 50; // 速度400用
+    slalom_step_in_table[gspeed_index_for_value(300)] = 70;  // 速度300用
+    slalom_step_out_table[gspeed_index_for_value(300)] = 110; // 速度300用
+    slalom_step_in_table[gspeed_index_for_value(400)] = 40;  // 速度400用
+    slalom_step_out_table[gspeed_index_for_value(400)] = 74; // 速度400用
     slalom_step_in_table[gspeed_index_for_value(500)] = 0;  // 速度500用
     slalom_step_out_table[gspeed_index_for_value(500)] = 40; // 速度500用
     slalom_inner_speed_table[gspeed_index_for_value(300)] = 100; // 速度300用
@@ -1650,8 +1650,13 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     
     // ポテンシャルMAP計算
     make_potential( goal_x, goal_y, mode );
- 
-    while( STEP < GO_STEP / 2 );  // 半区間進む 
+
+    if(motion == 1 || motion ==3 ){
+      // 前の行動が右折or左折の場合、距離を少なくする。
+      while( STEP < GO_STEP * 3 / 8 );  // 少し進む
+    }else{
+      while( STEP < GO_STEP / 2 );  // 半区間進む 
+    }
     // 柱まで進んだら
     // 壁情報取得＆MAPデータ上書き
     if( mode == S_MODE )
