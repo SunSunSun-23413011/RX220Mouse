@@ -89,7 +89,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     13   // 動作モード数
+#define   ModeMax     14   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -401,7 +401,9 @@ void mode9( int x );
 void mode10( int x );
 void mode11( int x );
 void mode12( int x );
+void mode13( int x );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
+void slalom_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
 void com_stop( void );
 void com_turn( int t_mode );
@@ -969,6 +971,7 @@ void change_mode( int x )
   else if( MODE == 10 ) mode10( DISP );   // Mode10:
   else if( MODE == 11 ) mode11( DISP );   // Mode11:
   else if( MODE == 12 ) mode12( DISP );   // Mode12:
+  else if( MODE == 13 ) mode13( DISP );   // Mode13:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -989,6 +992,7 @@ void exec_mode( void )
   else if( MODE == 10 ) mode10( EXEC );   // Mode10:
   else if( MODE == 11 ) mode11( EXEC );   // Mode11:
   else if( MODE == 12 ) mode12( EXEC );   // Mode12:
+  else if( MODE == 13 ) mode13( EXEC );   // Mode13:
 }
 
 //-------------------------------------------------------------------------
@@ -1426,6 +1430,29 @@ void mode12( int x ){
     }
   }
 }
+
+
+//-------------------------------------------------------------------------
+//  Mode13 : スラローム二次走行
+//-------------------------------------------------------------------------
+void mode13( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "13:SLTry" );
+    LCD_print( 8, "Spd " );
+    LCD_dec_out( 12, GSPEEDvar, 3 );
+    return;
+  }
+
+  select_gspeed( "6:Try   " );
+  map_DFread(MDATA_BK1);
+  pos_x = 0; pos_y = 0; head = 0;
+  ccnt(0);
+  slalom_search( goal_x, goal_y, GSPEEDvar, T_MODE );
+}
+
+
 //-------------------------------------------------------------------------
 //  探索関数    コンパイル最適化を外し元に戻す★ 7/22
 //-------------------------------------------------------------------------
@@ -1519,6 +1546,95 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
                                           // 00 -> 01 -> 10 -> 11 -(マスク)-> 00
   }
 }
+
+//-------------------------------------------------------------------------
+//  探索関数    コンパイル最適化を外し元に戻す★ 7/22
+//-------------------------------------------------------------------------
+void slalom_search( int goal_x, int goal_y, int spd, int mode )
+{
+  short motion;
+  reset_wall_samples();
+  if( pos_x == 0 && pos_y == 0 ){
+    start_back_wall_contact();
+  }
+  //countdown();                  
+  // カウントダウン
+  while( 1 ){
+    // １つのループは区間中心から次の区間中心まで
+    // 最初に半区画直進
+    control_mode = 1;             // 姿勢制御ON
+    rdir = 0; ldir = 0;           // 回転方向を直進
+    step_r = 0;                        //右ステップ数をリセット
+    step_l = 0;                        //左ステップ数をリセット
+    STEP = 0;                     // 距離カウンタリセット
+    speed = spd;                  // 速度設定
+    CPU_LED = 1;  // CPU層LEDを消灯 赤 9/23
+ 
+    // 座標更新
+    if     ( head == 0 ) pos_y++; // 北向き y+1
+    else if( head == 1 ) pos_x++; // 東向き x+1
+    else if( head == 2 ) pos_y--; // 南向き y-1
+    else if( head == 3 ) pos_x--; // 西向き x-1
+    
+    // ポテンシャルMAP計算
+    make_potential( goal_x, goal_y, mode );
+ 
+    while( STEP < GO_STEP / 2 );  // 半区間進む 
+    // 柱まで進んだら
+    // 壁情報取得＆MAPデータ上書き
+    if( mode == S_MODE )
+    make_map_data();
+    // 足立法で行動決定
+    motion = search_adachi();
+    
+    // ゴール時の例外処理（上で決めた行動が上書きされる）
+    if( pos_x == goal_x && pos_y == goal_y )
+      motion = 4;                       // ゴール到達：反転停止
+    // 行動を実行
+    switch( motion ){
+      // 直進
+      case  0 : while( STEP < GO_STEP );  // 残り半区間進む 
+                head_change = 0;          // 進行方向更新変数を前に設定
+                break;
+      // 右折
+      case  1 : com_slalom_turn(0);         // 右90度旋回
+                head_change = 1;          // 進行方向更新変数を右に設定
+                break;
+      // 反転
+      case  2 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 
+                kbat_lf_turn();            // 反転
+                head_change = 2;          // 進行方向更新変数を後に設定
+                break;
+      // 左折
+      case  3 : com_slalom_turn( 1 );            // 左90度旋回
+                head_change = 3;          // 進行方向更新変数を左に設定
+                break;
+      // 反転停止
+      case  4 : while( STEP < GO_STEP - speed_now * 3 && F_SEN < F_REF);  // 減速域を残して直進 
+                speed = 1;
+                while( STEP < GO_STEP && F_SEN < F_REF);  // 残りステップ数で減速 //
+                goal_kbat_turn();         // 反転(ゴール壁当て)
+                head_change = 2;          // 進行方向更新変数を後に設定
+                head = ( head + head_change ) & 0x03; // 詳細は下を参照
+                finish();                 // ゴール音
+                return;                   // ループ終了
+                break;
+      // その他
+      default : com_stop();               // 停止
+                head_change = 0;          // 進行方向更新変数を前に設定
+                head = ( head + head_change ) & 0x03; // 詳細は下を参照
+                return;                   // ループ終了
+                break;
+    }
+    
+    // 進行方向更新変数head_changeを用いて現在の進行方向headを更新
+    head = ( head + head_change ) & 0x03; // 更新数値を加算して2進数下2桁でマスク
+                                          // 00 -> 01 -> 10 -> 11 -(マスク)-> 00
+  }
+}
+
 //-------------------------------------------------------------------------
 //  直進モジュール (N区間前進) 
 //-------------------------------------------------------------------------
