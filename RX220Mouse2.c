@@ -672,8 +672,8 @@ void load_param( void )
       slalom_step_out_table[ i ] = SLALOM_STEP_OUT;
       slalom_inner_speed_table[ i ] = SLALOM_INNER_SPEED;
     }
-    for( i = gspeed_index_for_value(500); i < GSPEED_LEVELS; i++ ){
-      slalom_inner_speed_table[ i ] = 130; // 速度500以上は130に固定
+    for( i = gspeed_index_for_value(600); i < GSPEED_LEVELS; i++ ){
+      slalom_inner_speed_table[ i ] = 130; // 速度600以上は130に固定
     }
     slalom_step_in_table[gspeed_index_for_value(300)] = 70;  // 速度300用
     slalom_step_out_table[gspeed_index_for_value(300)] = 110; // 速度300用
@@ -683,7 +683,7 @@ void load_param( void )
     slalom_step_out_table[gspeed_index_for_value(500)] = 40; // 速度500用
     slalom_inner_speed_table[gspeed_index_for_value(300)] = 100; // 速度300用
     slalom_inner_speed_table[gspeed_index_for_value(400)] = 100; // 速度400用
-    slalom_inner_speed_table[gspeed_index_for_value(500)] = 130; // 速度500用
+    slalom_inner_speed_table[gspeed_index_for_value(500)] = 100; // 速度500用
 
   // 速度設定読み込み
      gspeed_index = GSPEED_DEFAULT_INDEX;
