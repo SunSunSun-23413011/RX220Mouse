@@ -664,6 +664,12 @@ void load_param( void )
       slalom_step_in_table[ i ] = SLALOM_STEP_IN;
       slalom_step_out_table[ i ] = SLALOM_STEP_OUT;
     }
+    slalom_step_in_table[gspeed_index_for_value(300)] = 50;  // 速度300用
+    slalom_step_out_table[gspeed_index_for_value(300)] = 90; // 速度300用
+    slalom_step_in_table[gspeed_index_for_value(400)] = 10;  // 速度400用
+    slalom_step_out_table[gspeed_index_for_value(400)] = 50; // 速度400用
+  
+  // 速度設定読み込み
      gspeed_index = GSPEED_DEFAULT_INDEX;
      GSPEEDvar = GSSPEED[ gspeed_index ];		// 目標速度設定
   slalom_step_readDF();
@@ -1184,6 +1190,16 @@ static void store_slalom_steps_for_speed( int index )
 
 //  Speed selection helpers
 //-------------------------------------------------------------------------
+static int gspeed_index_for_value( short speed )
+{
+  int i;
+  for( i = 0; i < GSPEED_LEVELS; i++ ){
+    if( GSSPEED[ i ] == speed )
+      return i;
+  }
+  return -1;
+}
+
 static void update_gspeed_index( int delta )
 {
   if( delta > 0 ){
@@ -1457,7 +1473,19 @@ void mode12( int x ){
       if( SW_UP   == 0 ) { SLALOM_STEP_OUT += 10; WaitKeyOff(); }
       if( SW_DOWN == 0 && SLALOM_STEP_OUT > 9 ) { SLALOM_STEP_OUT -= 10; WaitKeyOff(); }
       store_slalom_steps_for_speed( gspeed_index );
-      if( SW_EXEC == 0 ) { slalom_step_writeDF(); com_slalom_turn(0); com_stop();break; }
+      if( SW_EXEC == 0 ) {
+        slalom_step_writeDF();
+        control_mode = 1;
+        rdir = 0; ldir = 0;
+        step_r = 0;
+        step_l = 0;
+        STEP = 0;
+        speed = GSPEEDvar;
+        while( STEP < GO_STEP / 2 );
+        com_slalom_turn(0);
+        com_stop();
+        break;
+      }
     }
   }
 }
