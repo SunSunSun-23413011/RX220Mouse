@@ -656,8 +656,8 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
-    SLALOM_STEP_IN = 200;  // スラローム旋回ステップ数（内側）
-    SLALOM_STEP_OUT = 290; // スラローム旋回ステップ
+    SLALOM_STEP_IN = 20;  // スラローム旋回ステップ数（内側）
+    SLALOM_STEP_OUT = 90; // スラローム旋回ステップ
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
     for( i = 0; i < GSPEED_LEVELS; i++ ){
@@ -668,6 +668,8 @@ void load_param( void )
     slalom_step_out_table[gspeed_index_for_value(300)] = 90; // 速度300用
     slalom_step_in_table[gspeed_index_for_value(400)] = 10;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 50; // 速度400用
+    slalom_step_in_table[gspeed_index_for_value(500)] = 2;  // 速度500用
+    slalom_step_out_table[gspeed_index_for_value(500)] = 32; // 速度500用
   
   // 速度設定読み込み
      gspeed_index = GSPEED_DEFAULT_INDEX;
@@ -1462,16 +1464,16 @@ void mode12( int x ){
   // ????????
   while(1){
     while(1){
-      LCD_dec_out( 10, SLALOM_STEP_IN, 4 );
-      if( SW_UP   == 0 ) { SLALOM_STEP_IN += 10; WaitKeyOff(); }
-      if( SW_DOWN == 0 && SLALOM_STEP_IN > 9 ) { SLALOM_STEP_IN -= 10; WaitKeyOff(); }
+      LCD_dec_out( 8, SLALOM_STEP_IN, 4 );
+      if( SW_UP   == 0 ) { SLALOM_STEP_IN += 2; WaitKeyOff(); }
+      if( SW_DOWN == 0 && SLALOM_STEP_IN > 1 ) { SLALOM_STEP_IN -= 2; WaitKeyOff(); }
       store_slalom_steps_for_speed( gspeed_index );
       if( SW_EXEC == 0 ) { WaitKeyOff(); break;}
     }
     while(1){
-      LCD_dec_out( 10, SLALOM_STEP_OUT, 4 );
-      if( SW_UP   == 0 ) { SLALOM_STEP_OUT += 10; WaitKeyOff(); }
-      if( SW_DOWN == 0 && SLALOM_STEP_OUT > 9 ) { SLALOM_STEP_OUT -= 10; WaitKeyOff(); }
+      LCD_dec_out( 12, SLALOM_STEP_OUT, 4 );
+      if( SW_UP   == 0 ) { SLALOM_STEP_OUT += 2; WaitKeyOff(); }
+      if( SW_DOWN == 0 && SLALOM_STEP_OUT > 1 ) { SLALOM_STEP_OUT -= 2; WaitKeyOff(); }
       store_slalom_steps_for_speed( gspeed_index );
       if( SW_EXEC == 0 ) {
         slalom_step_writeDF();
