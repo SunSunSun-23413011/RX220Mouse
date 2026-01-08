@@ -679,8 +679,8 @@ void load_param( void )
     slalom_step_out_table[gspeed_index_for_value(300)] = 110; // 速度300用
     slalom_step_in_table[gspeed_index_for_value(400)] = 40;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 74; // 速度400用
-    slalom_step_in_table[gspeed_index_for_value(500)] = 0;  // 速度500用
-    slalom_step_out_table[gspeed_index_for_value(500)] = 40; // 速度500用
+    slalom_step_in_table[gspeed_index_for_value(500)] = 2;  // 速度500用
+    slalom_step_out_table[gspeed_index_for_value(500)] = 34; // 速度500用
     slalom_inner_speed_table[gspeed_index_for_value(300)] = 100; // 速度300用
     slalom_inner_speed_table[gspeed_index_for_value(400)] = 100; // 速度400用
     slalom_inner_speed_table[gspeed_index_for_value(500)] = 100; // 速度500用
@@ -1502,8 +1502,9 @@ void mode12( int x ){
         step_r = 0;
         step_l = 0;
         STEP = 0;
+        start_back_wall_contact();
         speed = GSPEEDvar;
-        while( STEP < GO_STEP / 2 - GSPEEDvar );
+        while( STEP < GO_STEP * 3 / 2 - GSPEEDvar );
         com_slalom_turn(0);
         com_stop();
         break;
