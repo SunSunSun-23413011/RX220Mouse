@@ -1254,6 +1254,8 @@ static void select_gspeed( const char *title )
     }
   }
 }
+
+//-------------------------------------------------------------------------
 //  Mode5 : 探索走行 
 //-------------------------------------------------------------------------
 void mode5( int x )
@@ -1790,7 +1792,7 @@ void com_slalom_turn( int t_mode ){
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_r < SLALOM_STEP_IN && F_SEN < F_REF);
+    while( step_r < SLALOM_STEP_IN && F_SEN < F_REF || R_SEN > R_LIM );
     control_mode = 2;           // スラローム用姿勢制御
     while( step_l < SLALOM_STEP_OUT );
   }
@@ -1798,9 +1800,10 @@ void com_slalom_turn( int t_mode ){
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_l < SLALOM_STEP_IN && F_SEN < F_REF);
+    while( step_l < SLALOM_STEP_IN && F_SEN < F_REF || L_SEN > L_LIM );
     control_mode = 3;           // スラローム用姿勢制御
-    while( step_r < SLALOM_STEP_OUT ); }
+    while( step_r < SLALOM_STEP_OUT );
+  }
   //else if( t_mode == 2 ) { T_STEP *= 2; rdir = 1; ldir = 0; }
   //else if( t_mode == 3 ) { T_STEP *= 2; rdir = 0; ldir = 1; }
 }
