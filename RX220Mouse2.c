@@ -670,10 +670,10 @@ void load_param( void )
     for( i = 0; i < GSPEED_LEVELS; i++ ){
       slalom_step_in_table[ i ] = SLALOM_STEP_IN;
       slalom_step_out_table[ i ] = SLALOM_STEP_OUT;
-      slalom_inner_speed_table[ i ] = SLALOM_INNER_SPEED;
+      slalom_inner_speed_table[ i ] = 100;
     }
-    for( i = gspeed_index_for_value(600); i < GSPEED_LEVELS; i++ ){
-      slalom_inner_speed_table[ i ] = 130; // 速度600以上は130に固定
+    for( i = gspeed_index_for_value(700); i < GSPEED_LEVELS; i++ ){
+      slalom_inner_speed_table[ i ] = 130; // 速度700以上は130に固定
     }
     slalom_step_in_table[gspeed_index_for_value(300)] = 70;  // 速度300用
     slalom_step_out_table[gspeed_index_for_value(300)] = 110; // 速度300用
@@ -1793,7 +1793,7 @@ void com_slalom_turn( int t_mode ){
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_r < SLALOM_STEP_IN && F_SEN < F_REF || R_SEN > R_LIM );
+    while( step_r < SLALOM_STEP_IN && F_SEN < F_REF - 500 || R_SEN > R_LIM );
     control_mode = 2;           // スラローム用姿勢制御
     while( step_l < SLALOM_STEP_OUT );
   }
@@ -1801,7 +1801,7 @@ void com_slalom_turn( int t_mode ){
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_l < SLALOM_STEP_IN && F_SEN < F_REF || L_SEN > L_LIM );
+    while( step_l < SLALOM_STEP_IN && F_SEN < F_REF - 500 || L_SEN > L_LIM );
     control_mode = 3;           // スラローム用姿勢制御
     while( step_r < SLALOM_STEP_OUT );
   }

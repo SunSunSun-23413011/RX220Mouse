@@ -1,4 +1,4 @@
-Renesas Optimizing Linker (W3.07.00 )             08-Jan-2026 19:00:50
+Renesas Optimizing Linker (W3.07.00 )             08-Jan-2026 20:08:47
 
 *** Options ***
 
@@ -66,17 +66,17 @@ D_2
 D
                                   fffc1644  fffc164f         c   4
 P
-                                  fffc1650  fffc5642      3ff3   4
+                                  fffc1650  fffc5647      3ff8   4
 PIntPRG
-                                  fffc5643  fffc5753       111   1
+                                  fffc5648  fffc575b       114   1
 W_1
-                                  fffc5754  fffc575f         c   4
+                                  fffc575c  fffc5767         c   4
 W_2
-                                  fffc5760  fffc5760         0   2
+                                  fffc5768  fffc5768         0   2
 W
-                                  fffc5760  fffc5760         0   4
+                                  fffc5768  fffc5768         0   4
 L
-                                  fffc5760  fffc58ba       15b   4
+                                  fffc5768  fffc58c2       15b   4
 $ADDR_C_FFFFFF80
                                   ffffff80  ffffff83         4   1
 $ADDR_C_FFFFFFA0
@@ -88,7 +88,7 @@ FIXEDVECT
 
 RAMDATA SECTION:  00000eb0 Byte(s)
 ROMDATA SECTION:  000016fa Byte(s)
-PROGRAM SECTION:  00004130 Byte(s)
+PROGRAM SECTION:  00004138 Byte(s)
 
 *** Symbol List ***
 
@@ -322,7 +322,7 @@ FILE=DefaultBuild\sbrk.obj
 
 SECTION=P
 FILE=DefaultBuild\RX220Mouse2.obj
-                                  fffc1650  fffc55bc      3f6d
+                                  fffc1650  fffc55c1      3f72
   _LCD_init
                                   fffc1650        6d   func ,g         * 
   _LCD
@@ -354,423 +354,423 @@ FILE=DefaultBuild\RX220Mouse2.obj
   _IO_init
                                   fffc1be4       3fc   func ,g         * 
   _load_param
-                                  fffc1fe0       1c6   func ,g         * 
+                                  fffc1fe0       1c1   func ,g         * 
   _reset_wall_samples
-                                  fffc21a6         a   func ,g         * 
+                                  fffc21a1         a   func ,g         * 
   _log_wall_samples
-                                  fffc21b0        ab   func ,g         * 
+                                  fffc21ab        ab   func ,g         * 
   _update_wall_ref_from_log
-                                  fffc225b        7c   func ,g         * 
+                                  fffc2256        7c   func ,g         * 
   _timerc_200us
-                                  fffc22d7       53a   func ,g         * 
+                                  fffc22d2       53a   func ,g         * 
   _int_mot_r
-                                  fffc2811        22   func ,g         * 
+                                  fffc280c        22   func ,g         * 
   _int_mot_l
-                                  fffc2833        22   func ,g         * 
+                                  fffc282e        22   func ,g         * 
   _pause
-                                  fffc2855        1c   func ,g         * 
+                                  fffc2850        1c   func ,g         * 
   _WaitKeyOff
-                                  fffc2871        43   func ,g         * 
+                                  fffc286c        43   func ,g         * 
   _beep
-                                  fffc28b4        4a   func ,g         * 
+                                  fffc28af        4a   func ,g         * 
   _ccnt
-                                  fffc28fe        3a   func ,g         * 
+                                  fffc28f9        3a   func ,g         * 
   _change_mode
-                                  fffc2938       14b   func ,g         * 
+                                  fffc2933       14b   func ,g         * 
   _exec_mode
-                                  fffc2a83       101   func ,g         * 
+                                  fffc2a7e       101   func ,g         * 
   _modeB1
-                                  fffc2b84        9b   func ,g         * 
+                                  fffc2b7f        9b   func ,g         * 
   _mode0
-                                  fffc2c1f        e6   func ,g         * 
+                                  fffc2c1a        e6   func ,g         * 
   _mode1
-                                  fffc2d05        de   func ,g         * 
+                                  fffc2d00        de   func ,g         * 
   _mode2
-                                  fffc2de3        7c   func ,g         * 
+                                  fffc2dde        7c   func ,g         * 
   _mode3
-                                  fffc2e5f        7d   func ,g         * 
+                                  fffc2e5a        7d   func ,g         * 
   _mode4
-                                  fffc2edc        76   func ,g         * 
+                                  fffc2ed7        76   func ,g         * 
   _set_slalom_steps_for_speed
-                                  fffc2f52        58   func ,l         * 
+                                  fffc2f4d        58   func ,l         * 
   _store_slalom_steps_for_speed
-                                  fffc2faa        58   func ,l         * 
+                                  fffc2fa5        58   func ,l         * 
   _gspeed_index_for_value
-                                  fffc3002        31   func ,l         * 
+                                  fffc2ffd        31   func ,l         * 
   _update_gspeed_index
-                                  fffc3033        72   func ,l         * 
+                                  fffc302e        72   func ,l         * 
   _select_gspeed
-                                  fffc30a5        87   func ,l         * 
+                                  fffc30a0        87   func ,l         * 
   _mode5
-                                  fffc312c        9a   func ,g         * 
+                                  fffc3127        9a   func ,g         * 
   _mode6
-                                  fffc31c6        79   func ,g         * 
+                                  fffc31c1        79   func ,g         * 
   _mode7
-                                  fffc323f        60   func ,g         * 
+                                  fffc323a        60   func ,g         * 
   _mode8
-                                  fffc329f        99   func ,g         * 
+                                  fffc329a        99   func ,g         * 
   _mode9
-                                  fffc3338        f8   func ,g         * 
+                                  fffc3333        f8   func ,g         * 
   _render_center_ref_line
-                                  fffc3430        45   func ,l         * 
+                                  fffc342b        45   func ,l         * 
   _mode10
-                                  fffc3475        99   func ,g         * 
+                                  fffc3470        99   func ,g         * 
   _mode11
-                                  fffc350e        f3   func ,g         * 
+                                  fffc3509        f3   func ,g         * 
   _mode12
-                                  fffc3601       1a1   func ,g         * 
+                                  fffc35fc       1a1   func ,g         * 
   _mode13
-                                  fffc37a2        84   func ,g         * 
+                                  fffc379d        84   func ,g         * 
   _mouse_search
-                                  fffc3826       409   func ,g         * 
+                                  fffc3821       409   func ,g         * 
   _slalom_search
-                                  fffc3c2f       342   func ,g         * 
+                                  fffc3c2a       342   func ,g         * 
   _com_go
-                                  fffc3f71        a9   func ,g         * 
+                                  fffc3f6c        a9   func ,g         * 
   _com_stop
-                                  fffc401a        4f   func ,g         * 
+                                  fffc4015        4f   func ,g         * 
   _com_turn
-                                  fffc4069        fd   func ,g         * 
+                                  fffc4064        fd   func ,g         * 
   _com_slalom_turn
-                                  fffc4166       17f   func ,g         * 
+                                  fffc4161       189   func ,g         * 
   _com_back
-                                  fffc42e5        bd   func ,g         * 
+                                  fffc42ea        bd   func ,g         * 
   _com_go_half
-                                  fffc43a2        97   func ,g         * 
+                                  fffc43a7        97   func ,g         * 
   _kbat_r
-                                  fffc4439        11   func ,g         * 
+                                  fffc443e        11   func ,g         * 
   _kbat_lf_turn
-                                  fffc444a        99   func ,g         * 
+                                  fffc444f        99   func ,g         * 
   _goal_kbat_turn
-                                  fffc44e3       11d   func ,g         * 
+                                  fffc44e8       11d   func ,g         * 
   _start_back_wall_contact
-                                  fffc4600        14   func ,l         * 
+                                  fffc4605        14   func ,l         * 
   _countdown
-                                  fffc4614        6c   func ,g         * 
+                                  fffc4619        6c   func ,g         * 
   _finish
-                                  fffc4680        30   func ,g         * 
+                                  fffc4685        30   func ,g         * 
   _map_writeDF
-                                  fffc46b0        77   func ,g         * 
+                                  fffc46b5        77   func ,g         * 
   _map_DFread
-                                  fffc4727        8a   func ,g         * 
+                                  fffc472c        8a   func ,g         * 
   _sensor_ref_writeDF
-                                  fffc47b1        3a   func ,g         * 
+                                  fffc47b6        3a   func ,g         * 
   _sensor_ref_readDF
-                                  fffc47eb        45   func ,g         * 
+                                  fffc47f0        45   func ,g         * 
   _slalom_step_writeDF
-                                  fffc4830        84   func ,g         * 
+                                  fffc4835        84   func ,g         * 
   _slalom_step_readDF
-                                  fffc48b4        f2   func ,g         * 
+                                  fffc48b9        f2   func ,g         * 
   _goal_choice_writeDF
-                                  fffc49a6        3d   func ,g         * 
+                                  fffc49ab        3d   func ,g         * 
   _goal_choice_readDF
-                                  fffc49e3        35   func ,g         * 
+                                  fffc49e8        35   func ,g         * 
   _fcu_reset
-                                  fffc4a18        1f   func ,g         * 
+                                  fffc4a1d        1f   func ,g         * 
   _fcu_tope
-                                  fffc4a37        22   func ,g         * 
+                                  fffc4a3c        22   func ,g         * 
   _fcu_toread
-                                  fffc4a59        1e   func ,g         * 
+                                  fffc4a5e        1e   func ,g         * 
   _error_check
-                                  fffc4a77        6e   func ,g         * 
+                                  fffc4a7c        6e   func ,g         * 
   _clear_flash
-                                  fffc4ae5        32   func ,g         * 
+                                  fffc4aea        32   func ,g         * 
   _wait_frdy
-                                  fffc4b17        30   func ,g         * 
+                                  fffc4b1c        30   func ,g         * 
   _DFlash_init
-                                  fffc4b47        84   func ,g         * 
+                                  fffc4b4c        84   func ,g         * 
   _DFlash_bread
-                                  fffc4bcb        44   func ,g         * 
+                                  fffc4bd0        44   func ,g         * 
   _DFlash_bprog
-                                  fffc4c0f        65   func ,g         * 
+                                  fffc4c14        65   func ,g         * 
   _get_wall_data
-                                  fffc4c74        56   func ,g         * 
+                                  fffc4c79        56   func ,g         * 
   _clear_map
-                                  fffc4cca        e6   func ,g         * 
+                                  fffc4ccf        e6   func ,g         * 
   _make_map_data
-                                  fffc4db0       199   func ,g         * 
+                                  fffc4db5       199   func ,g         * 
   _make_potential
-                                  fffc4f49       390   func ,g         * 
+                                  fffc4f4e       390   func ,g         * 
   _search_left_hand
-                                  fffc52d9        5b   func ,g         * 
+                                  fffc52de        5b   func ,g         * 
   _search_adachi
-                                  fffc5334       289   func ,g         * 
+                                  fffc5339       289   func ,g         * 
 FILE=DefaultBuild\sbrk.obj
-                                  fffc55bd  fffc55f8        3c
+                                  fffc55c2  fffc55fd        3c
   _sbrk
-                                  fffc55bd        3c   func ,g         * 
+                                  fffc55c2        3c   func ,g         * 
 FILE=__initsct
-                                  fffc55f9  fffc5642        4a
+                                  fffc55fe  fffc5647        4a
   __INITSCT
-                                  fffc55f9         0   none ,g         * 
+                                  fffc55fe         0   none ,g         * 
   loop1
-                                  fffc560b         0   none ,l         * 
+                                  fffc5610         0   none ,l         * 
   next_loop1
-                                  fffc5619         0   none ,l         * 
+                                  fffc561e         0   none ,l         * 
   loop3
-                                  fffc562b         0   none ,l         * 
+                                  fffc5630         0   none ,l         * 
   next_loop3
-                                  fffc563c         0   none ,l         * 
+                                  fffc5641         0   none ,l         * 
 
 SECTION=PIntPRG
 FILE=DefaultBuild\intprg.obj
-                                  fffc5643  fffc5753       111
+                                  fffc5648  fffc575b       114
   _Excep_SuperVisorInst
-                                  fffc5643         2   func ,g         * 
+                                  fffc5648         2   func ,g         * 
   _Excep_UndefinedInst
-                                  fffc5645         2   func ,g         * 
+                                  fffc564a         2   func ,g         * 
   _NonMaskableInterrupt
-                                  fffc5647         2   func ,g         * 
+                                  fffc564c         2   func ,g         * 
   _Dummy
-                                  fffc5649         2   func ,g         * 
+                                  fffc564e         2   func ,g         * 
   _Excep_BRK
-                                  fffc564b         4   func ,g         * 
+                                  fffc5650         4   func ,g         * 
   _Excep_BSC_BUSERR
-                                  fffc564f         2   func ,g         * 
+                                  fffc5654         2   func ,g         * 
   _Excep_FCU_FIFERR
-                                  fffc5651         2   func ,g         * 
+                                  fffc5656         2   func ,g         * 
   _Excep_FCU_FRDYI
-                                  fffc5653         2   func ,g         * 
+                                  fffc5658         2   func ,g         * 
   _Excep_ICU_SWINT
-                                  fffc5655         2   func ,g         * 
+                                  fffc565a         2   func ,g         * 
   _Excep_CMT0_CMI0
-                                  fffc5657         e   func ,g         * 
+                                  fffc565c         e   func ,g         * 
   _Excep_CMT1_CMI1
-                                  fffc5665         2   func ,g         * 
+                                  fffc566a         2   func ,g         * 
   _Excep_CMT2_CMI2
-                                  fffc5667         2   func ,g         * 
+                                  fffc566c         2   func ,g         * 
   _Excep_CMT3_CMI3
-                                  fffc5669         2   func ,g         * 
+                                  fffc566e         2   func ,g         * 
   _Excep_CAC_FERRF
-                                  fffc566b         2   func ,g         * 
+                                  fffc5670         2   func ,g         * 
   _Excep_CAC_MENDF
-                                  fffc566d         2   func ,g         * 
+                                  fffc5672         2   func ,g         * 
   _Excep_CAC_OVFF
-                                  fffc566f         2   func ,g         * 
+                                  fffc5674         2   func ,g         * 
   _Excep_RSPI0_SPEI0
-                                  fffc5671         2   func ,g         * 
+                                  fffc5676         2   func ,g         * 
   _Excep_RSPI0_SPRI0
-                                  fffc5673         2   func ,g         * 
+                                  fffc5678         2   func ,g         * 
   _Excep_RSPI0_SPTI0
-                                  fffc5675         2   func ,g         * 
+                                  fffc567a         2   func ,g         * 
   _Excep_RSPI0_SPII0
-                                  fffc5677         2   func ,g         * 
+                                  fffc567c         2   func ,g         * 
   _Excep_DOC_DOPCF
-                                  fffc5679         2   func ,g         * 
+                                  fffc567e         2   func ,g         * 
   _Excep_CMPB_CMPB0
-                                  fffc567b         1   func ,g         * 
+                                  fffc5680         1   func ,g         * 
   _Excep_CMPB_CMPB1
-                                  fffc567c         1   func ,g         * 
+                                  fffc5681         1   func ,g         * 
   _Excep_RTC_CUP
-                                  fffc567d         2   func ,g         * 
+                                  fffc5682         2   func ,g         * 
   _Excep_ICU_IRQ0
-                                  fffc567f         2   func ,g         * 
+                                  fffc5684         2   func ,g         * 
   _Excep_ICU_IRQ1
-                                  fffc5681         2   func ,g         * 
+                                  fffc5686         2   func ,g         * 
   _Excep_ICU_IRQ2
-                                  fffc5683         2   func ,g         * 
+                                  fffc5688         2   func ,g         * 
   _Excep_ICU_IRQ3
-                                  fffc5685         2   func ,g         * 
+                                  fffc568a         2   func ,g         * 
   _Excep_ICU_IRQ4
-                                  fffc5687         2   func ,g         * 
+                                  fffc568c         2   func ,g         * 
   _Excep_ICU_IRQ5
-                                  fffc5689         2   func ,g         * 
+                                  fffc568e         2   func ,g         * 
   _Excep_ICU_IRQ6
-                                  fffc568b         2   func ,g         * 
+                                  fffc5690         2   func ,g         * 
   _Excep_ICU_IRQ7
-                                  fffc568d         2   func ,g         * 
+                                  fffc5692         2   func ,g         * 
   _Excep_LVD_LVD1
-                                  fffc568f         2   func ,g         * 
+                                  fffc5694         2   func ,g         * 
   _Excep_LVD_LVD2
-                                  fffc5691         2   func ,g         * 
+                                  fffc5696         2   func ,g         * 
   _Excep_CMPA_CMPA1
-                                  fffc5693         1   func ,g         * 
+                                  fffc5698         1   func ,g         * 
   _Excep_CMPA_CMPA2
-                                  fffc5694         1   func ,g         * 
+                                  fffc5699         1   func ,g         * 
   _Excep_RTC_ALM
-                                  fffc5695         2   func ,g         * 
+                                  fffc569a         2   func ,g         * 
   _Excep_RTC_PRD
-                                  fffc5697         2   func ,g         * 
+                                  fffc569c         2   func ,g         * 
   _Excep_S12AD_S12ADI0
-                                  fffc5699         2   func ,g         * 
+                                  fffc569e         2   func ,g         * 
   _Excep_S12AD_GBADI
-                                  fffc569b         2   func ,g         * 
-  _Excep_ELC_ELSR18I
-                                  fffc569d         2   func ,g         * 
-  _Excep_ELC_ELSR19I
-                                  fffc569f         1   func ,g         * 
-  _Excep_MTU0_TGIA0
                                   fffc56a0         2   func ,g         * 
-  _Excep_MTU0_TGIB0
+  _Excep_ELC_ELSR18I
                                   fffc56a2         2   func ,g         * 
+  _Excep_ELC_ELSR19I
+                                  fffc56a4         1   func ,g         * 
+  _Excep_MTU0_TGIA0
+                                  fffc56a5         2   func ,g         * 
+  _Excep_MTU0_TGIB0
+                                  fffc56a7         2   func ,g         * 
   _Excep_MTU0_TGIC0
-                                  fffc56a4         2   func ,g         * 
+                                  fffc56a9         2   func ,g         * 
   _Excep_MTU0_TGID0
-                                  fffc56a6         2   func ,g         * 
+                                  fffc56ab         2   func ,g         * 
   _Excep_MTU0_TCIV0
-                                  fffc56a8         2   func ,g         * 
+                                  fffc56ad         2   func ,g         * 
   _Excep_MTU0_TGIE0
-                                  fffc56aa         2   func ,g         * 
+                                  fffc56af         2   func ,g         * 
   _Excep_MTU0_TGIF0
-                                  fffc56ac         2   func ,g         * 
+                                  fffc56b1         2   func ,g         * 
   _Excep_MTU1_TGIA1
-                                  fffc56ae         2   func ,g         * 
+                                  fffc56b3         2   func ,g         * 
   _Excep_MTU1_TGIB1
-                                  fffc56b0         2   func ,g         * 
+                                  fffc56b5         2   func ,g         * 
   _Excep_MTU1_TCIV1
-                                  fffc56b2         2   func ,g         * 
+                                  fffc56b7         2   func ,g         * 
   _Excep_MTU1_TCIU1
-                                  fffc56b4         2   func ,g         * 
+                                  fffc56b9         2   func ,g         * 
   _Excep_MTU2_TGIA2
-                                  fffc56b6         2   func ,g         * 
+                                  fffc56bb         2   func ,g         * 
   _Excep_MTU2_TGIB2
-                                  fffc56b8         2   func ,g         * 
+                                  fffc56bd         2   func ,g         * 
   _Excep_MTU2_TCIV2
-                                  fffc56ba         2   func ,g         * 
+                                  fffc56bf         2   func ,g         * 
   _Excep_MTU2_TCIU2
-                                  fffc56bc         2   func ,g         * 
+                                  fffc56c1         2   func ,g         * 
   _Excep_MTU3_TGIA3
-                                  fffc56be         2   func ,g         * 
+                                  fffc56c3         2   func ,g         * 
   _Excep_MTU3_TGIB3
-                                  fffc56c0         e   func ,g         * 
+                                  fffc56c5         e   func ,g         * 
   _Excep_MTU3_TGIC3
-                                  fffc56ce         2   func ,g         * 
+                                  fffc56d3         2   func ,g         * 
   _Excep_MTU3_TGID3
-                                  fffc56d0         2   func ,g         * 
+                                  fffc56d5         2   func ,g         * 
   _Excep_MTU3_TCIV3
-                                  fffc56d2         2   func ,g         * 
+                                  fffc56d7         2   func ,g         * 
   _Excep_MTU4_TGIA4
-                                  fffc56d4         2   func ,g         * 
+                                  fffc56d9         2   func ,g         * 
   _Excep_MTU4_TGIB4
-                                  fffc56d6         e   func ,g         * 
+                                  fffc56db         e   func ,g         * 
   _Excep_MTU4_TGIC4
-                                  fffc56e4         2   func ,g         * 
+                                  fffc56e9         2   func ,g         * 
   _Excep_MTU4_TGID4
-                                  fffc56e6         2   func ,g         * 
+                                  fffc56eb         2   func ,g         * 
   _Excep_MTU4_TCIV4
-                                  fffc56e8         2   func ,g         * 
+                                  fffc56ed         2   func ,g         * 
   _Excep_MTU5_TGIU5
-                                  fffc56ea         2   func ,g         * 
+                                  fffc56ef         2   func ,g         * 
   _Excep_MTU5_TGIV5
-                                  fffc56ec         2   func ,g         * 
+                                  fffc56f1         2   func ,g         * 
   _Excep_MTU5_TGIW5
-                                  fffc56ee         2   func ,g         * 
+                                  fffc56f3         2   func ,g         * 
   _Excep_POE_OEI1
-                                  fffc56f0         2   func ,g         * 
+                                  fffc56f5         2   func ,g         * 
   _Excep_POE_OEI2
-                                  fffc56f2         2   func ,g         * 
+                                  fffc56f7         2   func ,g         * 
   _Excep_TMR0_CMIA0
-                                  fffc56f4         2   func ,g         * 
+                                  fffc56f9         2   func ,g         * 
   _Excep_TMR0_CMIB0
-                                  fffc56f6         2   func ,g         * 
+                                  fffc56fb         2   func ,g         * 
   _Excep_TMR0_OVI0
-                                  fffc56f8         2   func ,g         * 
+                                  fffc56fd         2   func ,g         * 
   _Excep_TMR1_CMIA1
-                                  fffc56fa         2   func ,g         * 
+                                  fffc56ff         2   func ,g         * 
   _Excep_TMR1_CMIB1
-                                  fffc56fc         2   func ,g         * 
+                                  fffc5701         2   func ,g         * 
   _Excep_TMR1_OVI1
-                                  fffc56fe         2   func ,g         * 
+                                  fffc5703         2   func ,g         * 
   _Excep_TMR2_CMIA2
-                                  fffc5700         2   func ,g         * 
+                                  fffc5705         2   func ,g         * 
   _Excep_TMR2_CMIB2
-                                  fffc5702         2   func ,g         * 
+                                  fffc5707         2   func ,g         * 
   _Excep_TMR2_OVI2
-                                  fffc5704         2   func ,g         * 
+                                  fffc5709         2   func ,g         * 
   _Excep_TMR3_CMIA3
-                                  fffc5706         2   func ,g         * 
+                                  fffc570b         2   func ,g         * 
   _Excep_TMR3_CMIB3
-                                  fffc5708         2   func ,g         * 
+                                  fffc570d         2   func ,g         * 
   _Excep_TMR3_OVI3
-                                  fffc570a         2   func ,g         * 
+                                  fffc570f         2   func ,g         * 
   _Excep_DMAC_DMAC0I
-                                  fffc570c         2   func ,g         * 
+                                  fffc5711         2   func ,g         * 
   _Excep_DMAC_DMAC1I
-                                  fffc570e         2   func ,g         * 
+                                  fffc5713         2   func ,g         * 
   _Excep_DMAC_DMAC2I
-                                  fffc5710         2   func ,g         * 
+                                  fffc5715         2   func ,g         * 
   _Excep_DMAC_DMAC3I
-                                  fffc5712         2   func ,g         * 
+                                  fffc5717         2   func ,g         * 
   _Excep_SCI0_ERI0
-                                  fffc5714         1   func ,g         * 
+                                  fffc5719         1   func ,g         * 
   _Excep_SCI0_RXI0
-                                  fffc5715         1   func ,g         * 
+                                  fffc571a         1   func ,g         * 
   _Excep_SCI0_TXI0
-                                  fffc5716         1   func ,g         * 
+                                  fffc571b         1   func ,g         * 
   _Excep_SCI0_TEI0
-                                  fffc5717         1   func ,g         * 
+                                  fffc571c         1   func ,g         * 
   _Excep_SCI1_ERI1
-                                  fffc5718         2   func ,g         * 
+                                  fffc571d         2   func ,g         * 
   _Excep_SCI1_RXI1
-                                  fffc571a         2   func ,g         * 
+                                  fffc571f         2   func ,g         * 
   _Excep_SCI1_TXI1
-                                  fffc571c         2   func ,g         * 
+                                  fffc5721         2   func ,g         * 
   _Excep_SCI1_TEI1
-                                  fffc571e         2   func ,g         * 
+                                  fffc5723         2   func ,g         * 
   _Excep_SCI5_ERI5
-                                  fffc5720         2   func ,g         * 
+                                  fffc5725         2   func ,g         * 
   _Excep_SCI5_RXI5
-                                  fffc5722         2   func ,g         * 
+                                  fffc5727         2   func ,g         * 
   _Excep_SCI5_TXI5
-                                  fffc5724         2   func ,g         * 
+                                  fffc5729         2   func ,g         * 
   _Excep_SCI5_TEI5
-                                  fffc5726         2   func ,g         * 
+                                  fffc572b         2   func ,g         * 
   _Excep_SCI6_ERI6
-                                  fffc5728         2   func ,g         * 
+                                  fffc572d         2   func ,g         * 
   _Excep_SCI6_RXI6
-                                  fffc572a         2   func ,g         * 
+                                  fffc572f         2   func ,g         * 
   _Excep_SCI6_TXI6
-                                  fffc572c         2   func ,g         * 
+                                  fffc5731         2   func ,g         * 
   _Excep_SCI6_TEI6
-                                  fffc572e         2   func ,g         * 
+                                  fffc5733         2   func ,g         * 
   _Excep_SCI8_ERI8
-                                  fffc5730         1   func ,g         * 
+                                  fffc5735         1   func ,g         * 
   _Excep_SCI8_RXI8
-                                  fffc5731         1   func ,g         * 
+                                  fffc5736         1   func ,g         * 
   _Excep_SCI8_TXI8
-                                  fffc5732         1   func ,g         * 
+                                  fffc5737         1   func ,g         * 
   _Excep_SCI8_TEI8
-                                  fffc5733         1   func ,g         * 
+                                  fffc5738         1   func ,g         * 
   _Excep_SCI9_ERI9
-                                  fffc5734         2   func ,g         * 
+                                  fffc5739         2   func ,g         * 
   _Excep_SCI9_RXI9
-                                  fffc5736         2   func ,g         * 
+                                  fffc573b         2   func ,g         * 
   _Excep_SCI9_TXI9
-                                  fffc5738         2   func ,g         * 
+                                  fffc573d         2   func ,g         * 
   _Excep_SCI9_TEI9
-                                  fffc573a         2   func ,g         * 
+                                  fffc573f         2   func ,g         * 
   _Excep_SCI12_ERI12
-                                  fffc573c         2   func ,g         * 
+                                  fffc5741         2   func ,g         * 
   _Excep_SCI12_RXI12
-                                  fffc573e         2   func ,g         * 
+                                  fffc5743         2   func ,g         * 
   _Excep_SCI12_TXI12
-                                  fffc5740         2   func ,g         * 
+                                  fffc5745         2   func ,g         * 
   _Excep_SCI12_TEI12
-                                  fffc5742         2   func ,g         * 
+                                  fffc5747         2   func ,g         * 
   _Excep_SCI12_SCIX0
-                                  fffc5744         2   func ,g         * 
+                                  fffc5749         2   func ,g         * 
   _Excep_SCI12_SCIX1
-                                  fffc5746         2   func ,g         * 
+                                  fffc574b         2   func ,g         * 
   _Excep_SCI12_SCIX2
-                                  fffc5748         2   func ,g         * 
+                                  fffc574d         2   func ,g         * 
   _Excep_SCI12_SCIX3
-                                  fffc574a         2   func ,g         * 
+                                  fffc574f         2   func ,g         * 
   _Excep_RIIC0_EEI0
-                                  fffc574c         2   func ,g         * 
+                                  fffc5751         2   func ,g         * 
   _Excep_RIIC0_RXI0
-                                  fffc574e         2   func ,g         * 
+                                  fffc5753         2   func ,g         * 
   _Excep_RIIC0_TXI0
-                                  fffc5750         2   func ,g         * 
+                                  fffc5755         2   func ,g         * 
   _Excep_RIIC0_TEI0
-                                  fffc5752         2   func ,g         * 
+                                  fffc5757         2   func ,g         * 
 
 SECTION=W_1
 FILE=DefaultBuild\RX220Mouse2.obj
-                                  fffc5754  fffc575f         c
+                                  fffc575c  fffc5767         c
 
 SECTION=L
 FILE=DefaultBuild\RX220Mouse2.obj
-                                  fffc5760  fffc58ba       15b
+                                  fffc5768  fffc58c2       15b
 
 SECTION=$ADDR_C_FFFFFF80
 FILE=DefaultBuild\vecttbl.obj
