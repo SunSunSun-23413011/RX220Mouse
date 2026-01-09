@@ -1544,7 +1544,7 @@ void mode13( int x )
 //-------------------------------------------------------------------------
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
-  short motion, zerozero;
+  short motion, next_motion, zerozero;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
@@ -1560,8 +1560,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
     step_r = 0;                        //右ステップ数をリセット
     step_l = 0;                        //左ステップ数をリセット
     STEP = 0;                     // 距離カウンタリセット
-    if ( F_SEN > F_LIM2 && GSPEEDvar > 700 ) speed = 700; // 2マス先に壁がある場合は速度制限
-    else speed = spd;                  // 速度設定
+    speed = spd;                  // 速度設定
     CPU_LED = 1;  // CPU層LEDを消灯 赤 9/23
  
     // 座標更新
@@ -1572,6 +1571,10 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
     
     // ポテンシャルMAP計算
     make_potential( goal_x, goal_y, mode );
+    next_motion = search_adachi();  // 次の行動予測
+    if ( (F_SEN > F_LIM2 || next_motion == 1 || next_motion == 3) && GSPEEDvar > 700 ) speed = 700; // 2マス先に壁がある場合は速度制限
+    
+
     if( zerozero == 1 ){  // (0,0)スタート時のみ
       while( STEP < HALF_STEP );  // 半区間進む
       step_l = 0;                        //左ステップ数をリセット
