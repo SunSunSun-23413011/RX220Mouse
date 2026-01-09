@@ -340,14 +340,14 @@ short stepf_l = 1;
 short    STEP;             // モータのステップ数
 short    GO_STEP;          // 1区間のステップ数
 short    TURN_STEP;        // 超信旋回ステップ数
-short    SLALOM_STEP_IN;   // スラローム旋回ステップ数（内側）
+short    SLALOM_STEP_FORWARD;   // スラローム旋回ステップ数（内側）
 short    SLALOM_STEP_OUT;  // スラローム旋回ステップ数（外側）
 short    SLALOM_INNER_SPEED;  // ?????????
 short    BACK_STEP;        // 1区間の後退ステップ数
 short    HALF_STEP;        // 半区間の前進ステップ数
 uchar    gspeed_index;      // selected preset speed index
 short GSPEEDvar ;		// 目標速度  -----> これはRX用として残す
-static short slalom_step_in_table[ GSPEED_LEVELS ];
+static short slalom_step_forward_table[ GSPEED_LEVELS ];
 static short slalom_step_out_table[ GSPEED_LEVELS ];
 static short slalom_inner_speed_table[ GSPEED_LEVELS ];
 // 探索関連
@@ -663,24 +663,24 @@ void load_param( void )
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
-    SLALOM_STEP_IN = 20;  // スラローム旋回ステップ数（内側）
-    SLALOM_STEP_OUT = 90; // スラローム旋回ステップ
+    SLALOM_STEP_FORWARD = 20;  // スラローム旋回ステップ数（内側）
+    SLALOM_STEP_OUT = 40; // スラローム旋回ステップ
     BACK_STEP = KBAT_BACK_STEP; // 1区間後退ステップ数
     HALF_STEP = KBAT_HALF_STEP; // 半区間前進ステップ数
     for( i = 0; i < GSPEED_LEVELS; i++ ){
-      slalom_step_in_table[ i ] = SLALOM_STEP_IN;
+      slalom_step_forward_table[ i ] = SLALOM_STEP_FORWARD;
       slalom_step_out_table[ i ] = SLALOM_STEP_OUT;
       slalom_inner_speed_table[ i ] = 100;
     }
     for( i = gspeed_index_for_value(700); i < GSPEED_LEVELS; i++ ){
       slalom_inner_speed_table[ i ] = 130; // 速度700以上は130に固定
     }
-    slalom_step_in_table[gspeed_index_for_value(300)] = 70;  // 速度300用
-    slalom_step_out_table[gspeed_index_for_value(300)] = 110; // 速度300用
-    slalom_step_in_table[gspeed_index_for_value(400)] = 40;  // 速度400用
-    slalom_step_out_table[gspeed_index_for_value(400)] = 74; // 速度400用
-    slalom_step_in_table[gspeed_index_for_value(500)] = 2;  // 速度500用
-    slalom_step_out_table[gspeed_index_for_value(500)] = 34; // 速度500用
+    slalom_step_forward_table[gspeed_index_for_value(300)] = 70;  // 速度300用
+    slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
+    slalom_step_forward_table[gspeed_index_for_value(400)] = 100;  // 速度400用
+    slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
+    slalom_step_forward_table[gspeed_index_for_value(500)] = 2;  // 速度500用
+    slalom_step_out_table[gspeed_index_for_value(500)] = 32; // 速度500用
     slalom_inner_speed_table[gspeed_index_for_value(300)] = 100; // 速度300用
     slalom_inner_speed_table[gspeed_index_for_value(400)] = 100; // 速度400用
     slalom_inner_speed_table[gspeed_index_for_value(500)] = 100; // 速度500用
@@ -1193,7 +1193,7 @@ static void set_slalom_steps_for_speed( int index )
 {
   if( index < 0 || index >= GSPEED_LEVELS )
     return;
-  SLALOM_STEP_IN = slalom_step_in_table[ index ];
+  SLALOM_STEP_FORWARD = slalom_step_forward_table[ index ];
   SLALOM_STEP_OUT = slalom_step_out_table[ index ];
   SLALOM_INNER_SPEED = slalom_inner_speed_table[ index ];
 }
@@ -1202,7 +1202,7 @@ static void store_slalom_steps_for_speed( int index )
 {
   if( index < 0 || index >= GSPEED_LEVELS )
     return;
-  slalom_step_in_table[ index ] = SLALOM_STEP_IN;
+  slalom_step_forward_table[ index ] = SLALOM_STEP_FORWARD;
   slalom_step_out_table[ index ] = SLALOM_STEP_OUT;
   slalom_inner_speed_table[ index ] = SLALOM_INNER_SPEED;
 }
@@ -1484,9 +1484,9 @@ void mode12( int x ){
   // ????????
   while(1){
     while(1){
-      LCD_dec_out( 8, SLALOM_STEP_IN, 4 );
-      if( SW_UP   == 0 ) { SLALOM_STEP_IN += 2; WaitKeyOff(); }
-      if( SW_DOWN == 0 && SLALOM_STEP_IN > 1 ) { SLALOM_STEP_IN -= 2; WaitKeyOff(); }
+      LCD_dec_out( 8, SLALOM_STEP_FORWARD, 4 );
+      if( SW_UP   == 0 ) { SLALOM_STEP_FORWARD += 2; WaitKeyOff(); }
+      if( SW_DOWN == 0 && SLALOM_STEP_FORWARD > 1 ) { SLALOM_STEP_FORWARD -= 2; WaitKeyOff(); }
       store_slalom_steps_for_speed( gspeed_index );
       if( SW_EXEC == 0 ) { WaitKeyOff(); break;}
     }
@@ -1504,7 +1504,7 @@ void mode12( int x ){
         STEP = 0;
         start_back_wall_contact();
         speed = GSPEEDvar;
-        while( STEP < GO_STEP * 3 / 2 - GSPEEDvar );
+        while( STEP < GO_STEP * 3 / 2 - 300 );
         com_slalom_turn(0);
         com_stop();
         break;
@@ -1634,7 +1634,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 //-------------------------------------------------------------------------
 void slalom_search( int goal_x, int goal_y, int spd, int mode )
 {
-  short motion;
+  short motion, next_motion;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
@@ -1660,10 +1660,13 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     
     // ポテンシャルMAP計算
     make_potential( goal_x, goal_y, mode );
-
+    next_motion = search_adachi(); // 次の行動を予測
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
-      while( STEP < GO_STEP / 2 - GSPEEDvar );  // 少し進む
+      while( STEP < GO_STEP / 2 - 300 );  // 少し進む
+    }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 600 ){ // 速度600以上で次の行動が右折or左折の場合、前進しない
+      control_mode = 0; // 姿勢制御OFF
+      while( STEP < 100 );  // ほとんど進まない
     }else{
       while( STEP < GO_STEP / 2 );  // 半区間進む 
     }
@@ -1793,16 +1796,22 @@ void com_slalom_turn( int t_mode ){
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_r < SLALOM_STEP_IN && F_SEN < F_REF - 500 || R_SEN > R_LIM );
+    while( step_r < SLALOM_STEP_FORWARD && F_SEN < F_REF - 500 || R_SEN > R_LIM );
     control_mode = 2;           // スラローム用姿勢制御
+    step_r = 0;                               //右ステップ数をリセット
+    step_l = 0;                               //左ステップ数をリセット
+    STEP = 0;                               // 距離カウンタクリア
     while( step_l < SLALOM_STEP_OUT );
   }
   else if( t_mode == 1 ) {
     speed = 100;
     while( speed > speed_now );
     speed = speed_now;
-    while( step_l < SLALOM_STEP_IN && F_SEN < F_REF - 500 || L_SEN > L_LIM );
+    while( step_l < SLALOM_STEP_FORWARD && F_SEN < F_REF - 500 || L_SEN > L_LIM );
     control_mode = 3;           // スラローム用姿勢制御
+    step_r = 0;                               //右ステップ数をリセット
+    step_l = 0;                               //左ステップ数をリセット
+    STEP = 0;                               // 距離カウンタクリア
     while( step_r < SLALOM_STEP_OUT );
   }
   //else if( t_mode == 2 ) { T_STEP *= 2; rdir = 1; ldir = 0; }
@@ -2075,7 +2084,7 @@ void slalom_step_writeDF(void)
   data[1] = SLALOM_DATA_VERSION;
   data[2] = (unsigned short)GSPEED_LEVELS;
   for( i = 0; i < GSPEED_LEVELS; i++ ){
-    data[3 + (i * 2)] = (unsigned short)slalom_step_in_table[ i ];
+    data[3 + (i * 2)] = (unsigned short)slalom_step_forward_table[ i ];
     data[4 + (i * 2)] = (unsigned short)slalom_step_out_table[ i ];
   }
   for( i = 0; i < GSPEED_LEVELS; i++ ){
@@ -2098,7 +2107,7 @@ void slalom_step_readDF(void)
     short in_val = (short)data[2];
     short out_val = (short)data[3];
     for( i = 0; i < GSPEED_LEVELS; i++ ){
-      slalom_step_in_table[ i ] = in_val;
+      slalom_step_forward_table[ i ] = in_val;
       slalom_step_out_table[ i ] = out_val;
     }
     return;
@@ -2110,7 +2119,7 @@ void slalom_step_readDF(void)
     if( count < 0 ) count = 0;
     if( count > GSPEED_LEVELS ) count = GSPEED_LEVELS;
     for( i = 0; i < count; i++ ){
-      slalom_step_in_table[ i ] = (short)data[3 + (i * 2)];
+      slalom_step_forward_table[ i ] = (short)data[3 + (i * 2)];
       slalom_step_out_table[ i ] = (short)data[4 + (i * 2)];
     }
     for( i = 0; i < count; i++ ){
