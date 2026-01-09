@@ -679,7 +679,7 @@ void load_param( void )
     slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
     slalom_step_forward_table[gspeed_index_for_value(400)] = 100;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
-    slalom_step_forward_table[gspeed_index_for_value(500)] = 2;  // 速度500用
+    slalom_step_forward_table[gspeed_index_for_value(500)] = 4;  // 速度500用
     slalom_step_out_table[gspeed_index_for_value(500)] = 32; // 速度500用
     slalom_step_forward_table[gspeed_index_for_value(600)] = 2;  // 速度600用
     slalom_step_out_table[gspeed_index_for_value(600)] = 20; // 速度600用
@@ -1666,7 +1666,7 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
       while( STEP < GO_STEP / 2 - 300 );  // 少し進む
-    }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 600 ){ // 速度600以上で次の行動が右折or左折の場合、前進しない
+    }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 700 ){ // 速度700以上で次の行動が右折or左折の場合、前進しない
       control_mode = 0; // 姿勢制御OFF
       while( STEP < 100 );  // ほとんど進まない
     }else{
