@@ -322,6 +322,7 @@ short    F_REF;            // 前センサしきい値  前壁位置合わせなし
 short    R_LIM;            // 右壁有無しきい値
 short    L_LIM;            // 左壁有無しきい値
 short    F_LIM;            // 前壁有無しきい値
+short    F_LIM2;           // 2マス先前壁有無しきい値
 // モータ関連
 ushort   timerL;           // 左タイマー設定値
 ushort   timerR;           // 右タイマー設定値
@@ -657,9 +658,10 @@ void load_param( void )
   L_REF   = 640;    // 区画中央での左センサ値 11/6[387-612-587,478] 550
   F_REF   = 1550;    // 区画中央での前センサ値 11/6[71-340-925] 250
   // 壁の有無判定用しきい値:各センサ壁あり最小値と壁なし値の中間値
-  R_LIM   =  150;    // 右 11/6[147-459-537,317] 350
+  R_LIM   =  170;    // 右 11/6[147-459-537,317] 350
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
   F_LIM   = 170;    // 前 11/6[71-340-925] 100 150
+  F_LIM2  =100;    // 2マス先前壁
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
@@ -675,14 +677,14 @@ void load_param( void )
     for( i = gspeed_index_for_value(600); i < GSPEED_LEVELS; i++ ){
       slalom_inner_speed_table[ i ] = 50; // 速度600以上は50に固定
     }
-    slalom_step_forward_table[gspeed_index_for_value(300)] = 100;  // 速度300用
+    slalom_step_forward_table[gspeed_index_for_value(300)] = 110;  // 速度300用
     slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
     slalom_step_forward_table[gspeed_index_for_value(400)] = 100;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
     slalom_step_forward_table[gspeed_index_for_value(500)] = 4;  // 速度500用
     slalom_step_out_table[gspeed_index_for_value(500)] = 32; // 速度500用
     slalom_step_forward_table[gspeed_index_for_value(600)] = 2;  // 速度600用
-    slalom_step_out_table[gspeed_index_for_value(600)] = 20; // 速度600用
+    slalom_step_out_table[gspeed_index_for_value(600)] = 18; // 速度600用
     slalom_inner_speed_table[gspeed_index_for_value(300)] = 100; // 速度300用
     slalom_inner_speed_table[gspeed_index_for_value(400)] = 100; // 速度400用
     slalom_inner_speed_table[gspeed_index_for_value(500)] = 100; // 速度500用
@@ -1558,7 +1560,8 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
     step_r = 0;                        //右ステップ数をリセット
     step_l = 0;                        //左ステップ数をリセット
     STEP = 0;                     // 距離カウンタリセット
-    speed = spd;                  // 速度設定
+    if ( F_SEN > F_LIM2 && GSPEEDvar > 700 ) speed = 700; // 2マス先に壁がある場合は速度制限
+    else speed = spd;                  // 速度設定
     CPU_LED = 1;  // CPU層LEDを消灯 赤 9/23
  
     // 座標更新
@@ -1682,9 +1685,9 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
       while( STEP < GO_STEP / 2 - 300 );  // 少し進む
-    }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 700 ){ // 速度700以上で次の行動が右折or左折の場合、前進しない
+    }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 600 ){ // 速度700以上で次の行動が右折or左折の場合、前進しない
       control_mode = 0; // 姿勢制御OFF
-      while( STEP < 100 );  // ほとんど進まない
+      while( STEP < 200 );  // ほとんど進まない
     }else{
       while( STEP < GO_STEP / 2 );  // 半区間進む 
     }
