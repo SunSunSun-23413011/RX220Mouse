@@ -675,7 +675,7 @@ void load_param( void )
     for( i = gspeed_index_for_value(600); i < GSPEED_LEVELS; i++ ){
       slalom_inner_speed_table[ i ] = 50; // 速度600以上は50に固定
     }
-    slalom_step_forward_table[gspeed_index_for_value(300)] = 70;  // 速度300用
+    slalom_step_forward_table[gspeed_index_for_value(300)] = 100;  // 速度300用
     slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
     slalom_step_forward_table[gspeed_index_for_value(400)] = 100;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
@@ -1506,7 +1506,7 @@ void mode12( int x ){
         STEP = 0;
         start_back_wall_contact();
         speed = GSPEEDvar;
-        while( STEP < GO_STEP * 3 / 2 - 300 );
+        while( STEP < GO_STEP * 3 / 2 - 300 + HALF_STEP );
         com_slalom_turn(0);
         com_stop();
         break;
@@ -1542,10 +1542,11 @@ void mode13( int x )
 //-------------------------------------------------------------------------
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
-  short motion;
+  short motion, zerozero;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
+    zerozero = 1;
   }
   //countdown();                  
   // カウントダウン
@@ -1568,7 +1569,14 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
     
     // ポテンシャルMAP計算
     make_potential( goal_x, goal_y, mode );
- 
+    if( zerozero == 1 ){  // (0,0)スタート時のみ
+      while( STEP < HALF_STEP );  // 半区間進む
+      step_l = 0;                        //左ステップ数をリセット
+      step_r = 0;                        //右ステップ数をリセット
+      STEP = 0;                     // 距離カウンタリセット
+      zerozero = 0;
+    }
+    // 半区間直進
     while( STEP < GO_STEP / 2 );  // 半区間進む 
     // 柱まで進んだら
     // 壁情報取得＆MAPデータ上書き
@@ -1636,10 +1644,11 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 //-------------------------------------------------------------------------
 void slalom_search( int goal_x, int goal_y, int spd, int mode )
 {
-  short motion, next_motion;
+  short motion, next_motion, zerozero;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
+    zerozero = 1;
   }
   //countdown();                  
   // カウントダウン
@@ -1663,6 +1672,13 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     // ポテンシャルMAP計算
     make_potential( goal_x, goal_y, mode );
     next_motion = search_adachi(); // 次の行動を予測
+    if( zerozero ==1 ){  // (0,0)スタート時のみ
+      while( STEP < HALF_STEP );  // 半区間進む
+      step_r = 0;                        //右ステップ数をリセット
+      step_l = 0;                        //左ステップ数をリセット
+      STEP = 0;                     // 距離カウンタリセット
+      zerozero = 0;
+    }
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
       while( STEP < GO_STEP / 2 - 300 );  // 少し進む
@@ -1969,8 +1985,8 @@ static void start_back_wall_contact( void )
   com_stop();
   com_back( 1 );
   com_stop();
-  com_go_half( 1 );
-  com_stop();
+  //com_go_half( 1 );
+  //com_stop();
 }
 //-------------------------------------------------------------------------
 //  カウントダウン 
