@@ -91,7 +91,7 @@ void abort(void);
 #define   SW_OFF      1    // スイッチOFF
 #define   KEY_OFF   200    // スイッチ用チャタリングキャンセル時間
 // モード関連
-#define   ModeMax     15   // 動作モード数
+#define   ModeMax     16   // 動作モード数
 #define   DISP        0    // モード表示
 #define   EXEC        1    // モード実行
 
@@ -172,6 +172,13 @@ static short mpu_gyy;
 static short mpu_gyz;
 static unsigned char mpu_init_state;
 static unsigned char mpu_req_pending;
+static short mpu_gyx_raw;
+static short mpu_gyy_raw;
+static short mpu_gyz_raw;
+static short mpu_gyx_offset;
+static short mpu_gyy_offset;
+static short mpu_gyz_offset;
+static unsigned char mpu_sample_ready;
 //ブザー関連 : 休符,ド,ド#,レ,レ#,ミ,ファ,ファ#,ソ,ソ#,ラ,ラ#,シ,ド
 enum beep_tone {
   BEEP_MUTE = 0,
@@ -435,6 +442,8 @@ void mode11( int x );
 void mode12( int x );
 void mode13( int x );
 void mode14( int x );
+void mode15( int x );
+
 static void lcd_signed_out( int pt, int x, int digits );
 static void mpu6050_poll( void );
 static void mpu6050_init( void );
@@ -1049,6 +1058,7 @@ void change_mode( int x )
   else if( MODE == 12 ) mode12( DISP );   // Mode12:
   else if( MODE == 13 ) mode13( DISP );   // Mode13:
   else if( MODE == 14 ) mode14( DISP );   // Mode14:
+  else if( MODE == 15 ) mode15( DISP );   // Mode15:
 }
 //-------------------------------------------------------------------------
 //  モード処理
@@ -1071,6 +1081,7 @@ void exec_mode( void )
   else if( MODE == 12 ) mode12( EXEC );   // Mode12:
   else if( MODE == 13 ) mode13( EXEC );   // Mode13:
   else if( MODE == 14 ) mode14( EXEC );   // Mode14:
+  else if( MODE == 15 ) mode15( EXEC );   // Mode15:
 }
 
 //-------------------------------------------------------------------------
@@ -1595,8 +1606,8 @@ void mode14( int x )
     LCD_print( 0, "14:GYRO" );
     LCD_print( 8, "        " );
     pause( 1000 );
-    LCD_print( 0, "GX      " );
-    //LCD_print( 8, "GZ     T " );
+    LCD_print( 0, "GX" );
+    LCD_print( 8, "GY" );
     return;
   }
 
@@ -1604,13 +1615,60 @@ void mode14( int x )
     mpu6050_poll();
     lcd_signed_out(  2, mpu_gyx / 131, 4 );
     //lcd_signed_out( 10, mpu_gyy, 4 );
-    //lcd_signed_out(  2 + 8, mpu_gyz, 4 );
-    //lcd_signed_out(  9 + 8, mpu_tmp, 4 );
     if( SW_EXEC == 0 ){
       WaitKeyOff();
       return;
     }
   }
+}
+
+//-------------------------------------------------------------------------
+//  Mode15 : Gyro Cal
+//-------------------------------------------------------------------------
+void mode15( int x )
+{
+  long sum_x = 0;
+  long sum_y = 0;
+  long sum_z = 0;
+  int count = 0;
+
+  if( x == DISP )
+  {
+    LCD_print( 0, "15:CAL" );
+    LCD_print( 8, "GYRO" );
+    return;
+  }
+
+  LCD_print( 0, "CAL WAIT" );
+  LCD_print( 8, "DO NOT" );
+  pause( 500 );
+
+  mpu_sample_ready = 0;
+  while( count < 200 ){
+    mpu6050_poll();
+    if( mpu_sample_ready ){
+      mpu_sample_ready = 0;
+      sum_x += mpu_gyx_raw;
+      sum_y += mpu_gyy_raw;
+      sum_z += mpu_gyz_raw;
+      count++;
+    }
+  }
+
+  mpu_gyx_offset = (short)(sum_x / count);
+  mpu_gyy_offset = (short)(sum_y / count);
+  mpu_gyz_offset = (short)(sum_z / count);
+
+  LCD_print( 0, "OX" );
+  LCD_print( 8, "OY" );
+  lcd_signed_out( 2, mpu_gyx_offset, 4 );
+  lcd_signed_out( 10, mpu_gyy_offset, 4 );
+  pause( 2000 );
+
+  LCD_print( 0, "OZ" );
+  LCD_print( 8, "DONE" );
+  lcd_signed_out( 2, mpu_gyz_offset, 4 );
+  pause( 2000 );
 }
 
 static void lcd_signed_out( int pt, int x, int digits )
@@ -1648,6 +1706,7 @@ static void mpu6050_poll( void )
     init_riic0();
     mpu_init_state = 1;
     mpu_req_pending = 0;
+    mpu_sample_ready = 0;
     return;
   }
 
@@ -1672,9 +1731,13 @@ static void mpu6050_poll( void )
     mpu_acy = (short)(((unsigned char)buf[ 2 ] << 8) | (unsigned char)buf[ 3 ]);
     mpu_acz = (short)(((unsigned char)buf[ 4 ] << 8) | (unsigned char)buf[ 5 ]);
     mpu_tmp = (short)(((unsigned char)buf[ 6 ] << 8) | (unsigned char)buf[ 7 ]);
-    mpu_gyx = (short)(((unsigned char)buf[ 8 ] << 8) | (unsigned char)buf[ 9 ]);
-    mpu_gyy = (short)(((unsigned char)buf[ 10 ] << 8) | (unsigned char)buf[ 11 ]);
-    mpu_gyz = (short)(((unsigned char)buf[ 12 ] << 8) | (unsigned char)buf[ 13 ]);
+    mpu_gyx_raw = (short)(((unsigned char)buf[ 8 ] << 8) | (unsigned char)buf[ 9 ]);
+    mpu_gyy_raw = (short)(((unsigned char)buf[ 10 ] << 8) | (unsigned char)buf[ 11 ]);
+    mpu_gyz_raw = (short)(((unsigned char)buf[ 12 ] << 8) | (unsigned char)buf[ 13 ]);
+    mpu_gyx = (short)(mpu_gyx_raw - mpu_gyx_offset);
+    mpu_gyy = (short)(mpu_gyy_raw - mpu_gyy_offset);
+    mpu_gyz = (short)(mpu_gyz_raw - mpu_gyz_offset);
+    mpu_sample_ready = 1;
     mpu_req_pending = 0;
   }
 }
