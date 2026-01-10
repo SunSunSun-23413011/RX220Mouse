@@ -35,6 +35,7 @@
 
 #include <machine.h>
 #include "vect.h"
+#include "RX-I2C.h"
 #pragma section IntPRG
 
 extern timerc_200us();		// 割込み関数(基本処理用)の定義 2022/7/4
@@ -411,14 +412,14 @@ void Excep_SCI12_SCIX2(void){ }
 void Excep_SCI12_SCIX3(void){ }
 
 // RIIC0 EEI0
-void Excep_RIIC0_EEI0(void){ }
+void Excep_RIIC0_EEI0(void){ int_iic0_eei(); }
 
 // RIIC0 RXI0
-void Excep_RIIC0_RXI0(void){ }
+void Excep_RIIC0_RXI0(void){ int_iic0_rxi(); }
 
 // RIIC0 TXI0
-void Excep_RIIC0_TXI0(void){ }
+void Excep_RIIC0_TXI0(void){ int_iic0_txi(); }
 
 // RIIC0 TEI0
-void Excep_RIIC0_TEI0(void){ }
+void Excep_RIIC0_TEI0(void){ int_iic0_tei(); }
 

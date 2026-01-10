@@ -91,11 +91,16 @@ void abort(void);
 #define   SW_OFF      1    // �X�C�b�`OFF
 #define   KEY_OFF   200    // �X�C�b�`�p�`���^�����O�L�����Z������
 // ���[�h�֘A
-#define   ModeMax     14   // ���샂�[�h��
+#define   ModeMax     15   // ���샂�[�h��
 #define   DISP        0    // ���[�h�\��
 #define   EXEC        1    // ���[�h���s
 
 #define CLK400
+
+#define MPU6050_ADDR 0x68
+#define MPU6050_REG_PWR_MGMT_1 0x6B
+#define MPU6050_REG_ACCEL_XOUT_H 0x3B
+#define MPU6050_READ_COUNT 14
 
 // �S�[�����W���ꗗ
 typedef struct {
@@ -158,6 +163,15 @@ vushort  wait_timer = 0;   // �������v( msec ) : wait�֐��p�J�E���^
 ushort   SENSOR_PT;        // ���荞�݉񐔃J�E���g�p�|�C���^
 int      MODE = 0;         // ���݃��[�h�i�[�p
 vshort   Batt;             // �d�r�̓d��
+static short mpu_acx;
+static short mpu_acy;
+static short mpu_acz;
+static short mpu_tmp;
+static short mpu_gyx;
+static short mpu_gyy;
+static short mpu_gyz;
+static unsigned char mpu_init_state;
+static unsigned char mpu_req_pending;
 //�u�U�[�֘A : �x��,�h,�h#,��,��#,�~,�t�@,�t�@#,�\,�\#,��,��#,�V,�h
 enum beep_tone {
   BEEP_MUTE = 0,
@@ -307,291 +321,7 @@ static inline void ccnt_playback_tick(void)
   ccnt_step_index++;
 }
 
-void init_riic0(void){
-	SYSTEM.PRCR.WORD = 0xA50a;		// 消費電力低減機�?�設定レジスタ書き込み許可
-	MSTP(RIIC0)=0;
-	SYSTEM.PRCR.WORD = 0xA500;		// 消費電力低減機�?�設定レジスタ書き込み禁止	
-	RIIC0.ICCR1.BIT.ICE	= 0;
-	while( RIIC0.ICCR1.BIT.ICE != 0 );
-	RIIC0.ICCR1.BIT.IICRST 	= 1;
-	RIIC0.ICCR1.BIT.IICRST 	= 0;
-	
-#ifdef CLK100
-	//100kbps 
-	RIIC0.ICMR1.BIT.CKS 		= 2;	//2  CKS = 1
-	RIIC0.ICBRH.BYTE		= 10;	//2  ICBRH=8
-	RIIC0.ICBRL.BYTE		= 12;	//3  ICBRL=19
-#endif
 
-#ifdef CLK400
-	//400kbps 	
-	RIIC0.ICMR1.BIT.CKS	= 1;
-	RIIC0.ICBRH.BYTE		= 9;	
-	RIIC0.ICBRL.BYTE		= 9;
-#endif	
-	RIIC0.ICIER.BIT.ALIE	= 0;
-	RIIC0.ICIER.BYTE 		= 0x00;
-	IEN(RIIC0,EEI0)			= 1;
-	IEN(RIIC0,RXI0)		= 1;
-	IEN(RIIC0,TXI0)			= 1;
-	IEN(RIIC0,TEI0)			= 1;
-	IPR(RIIC0,EEI0)			= 14;
-	IPR(RIIC0,RXI0)			= 14;
-	IPR(RIIC0,TXI0)			= 14;
-	IPR(RIIC0,TEI0)			= 14;	
-	RIIC0.ICSER.BYTE = 0x00;
-	RIIC0.ICMR2.BIT.TMOL=1;
-	RIIC0.ICMR3.BIT.NF=2;
-	RIIC0.ICMR3.BIT.ACKWP = 0;        // disable protect for ACKBT 
-	PORT1.PMR.BIT.B6 = 1;
-	PORT1.PMR.BIT.B7 = 1;
-	RIIC0.ICCR1.BIT.ICE =1;
-	RIIC0.ICFER.BIT.TMOE =1;
-	RIIC0.ICFER.BIT.MALE =0;
-	RIIC0.ICFER.BIT.NALE =0;
-	RIIC0.ICFER.BIT.SALE =1;
-	RIIC0.ICFER.BIT.NACKE =0;
-	RIIC0.ICFER.BIT.NFE =1;
-	RIIC0.ICFER.BIT.SCLE =1;
-	
-	MPC.PWPR.BIT.B0WI = 0;		//PFSWEへの書き込み許可	
-	MPC.PWPR.BIT.PFSWE = 1;		//PFCレジスタへ書き込み許可
-	MPC.P16PFS.BIT.PSEL = 15;	// SCL
-	MPC.P17PFS.BIT.PSEL = 15;	// SDA
-	MPC.PWPR.BIT.PFSWE = 0;		//PFCレジスタへ書き込み禁止	
-	MPC.PWPR.BIT.B0WI = 1;		//PFSWEへの書き込み禁止	
-}
-void int_iic0_eei(void){
-	if( RIIC0.ICSR2.BIT.TMOF==1 ){
-		RIIC0.ICCR2.BIT.SP			= 1;	//ストップコン�?ィションの要求をする
-	}
-	if(RIIC0.ICSR2.BIT.NACKF==1){
-		RIIC0.ICCR2.BIT.SP			= 1;	//ストップコン�?ィションの要求をする
-	}
-	if(RIIC0.ICSR2.BIT.AL==1){
-		RIIC0.ICCR2.BIT.SP			= 1;	//ストップコン�?ィションの要求をする
-	}
-	RIIC0.ICCR1.BIT.IICRST=1;
-	RIIC0.ICCR1.BIT.ICE=0;
-	RIIC0.ICSR2.BIT.NACKF=0;
-	RIIC0.ICSR2.BIT.TMOF=0;
-	RIIC0.ICSR2.BIT.AL=0;	
-}
-void int_iic0_rxi(void){
-	static int num;
-	int i;
-	//RIIC0.ICMR3.BIT.RDRFS=1;
-	receve_data[num++]=RIIC0.ICDRR;
-	if(num>=50){
-		num=0;	
-	}
-	if(receve_num==num){
-			RIIC0.ICMR3.BIT.ACKWP=1;
-			RIIC0.ICMR3.BIT.ACKBT=1;	
-	}else if(receve_num<num){
-			num=0;
-			for(i=0;i<=receve_num;i++){
-				receve_data_out[i]=receve_data[i+1];
-			}
-			
-			for(i=0;i<sizeof(receve_data);i++){
-				receve_data[i]=0;
-			}
-			receve_fin_flag=1;
-			stop_disen_flag=0;
-			receve_flag=0;
-			RIIC0.ICIER.BIT.TIE 			= 0;	//　送信�?ータエンプティ割込み
-			IEN(RIIC0,TXI0)				= 1;
-			RIIC0.ICIER.BIT.TEIE 		= 1;	//　送信終�?割込み　
-			IEN(RIIC0,TEI0)				= 1;
-			RIIC0.ICIER.BIT.RIE 			= 0;	//　割込み
-			RIIC0.ICSR2.BIT.STOP 		= 0;
-			RIIC0.ICCR2.BIT.SP			= 1;	//ストップコン�?ィションの要求をする
-			RIIC0.ICMR3.BIT.ACKWP=1;
-			RIIC0.ICMR3.BIT.ACKBT=1;	
-	}else{
-		RIIC0.ICMR3.BIT.ACKWP=1;
-		RIIC0.ICMR3.BIT.ACKBT=0;	
-	}
-			
-}
-void int_iic0_txi(void){
-	static int n=0 ;
-	
-	if(receve_flag==1){
-		RIIC0.ICDRT	=  (send_data[0] | 0x01);//R/W#ビットを?��にして突っ込む
-		
-		
-	}else{
-		if( n < send_data_num ){
-				RIIC0.ICDRT = send_data[n++];
-		}else{
-				n=0;
-				RIIC0.ICIER.BIT.TIE 			= 0;	//　送信�?ータエンプティ割込み
-				IEN(RIIC0,TXI0)				= 0;
-				RIIC0.ICIER.BIT.TEIE 		= 1;	//　送信終�?割込み　
-				IEN(RIIC0,TEI0)				= 1;	
-		}
-	}
-}
-void int_iic0_tei(void){
-		RIIC0.ICSR2.BIT.AL			= 0;	//アービトレーションロストフラグをクリア
-		RIIC0.ICCR2.BIT.SP			= 0;	//ストップコン�?ィションの発行を要求しな�?
-		RIIC0.ICSR2.BIT.NACKF		= 0;	//NACKフラグをクリア	
-		RIIC0.ICSR2.BIT.STOP 		= 0;
-		RIIC0.ICCR2.BIT.SP			= 1;	//ストップコン�?ィションの要求をする
-		RIIC0.ICIER.BIT.TEIE 		= 1;	//　送信終�?割込み　
-		IEN(RIIC0,TEI0)				= 1;
-			
-		while(RIIC0.ICSR2.BIT.STOP != 1);			
-		RIIC0.ICMR2.BIT.TMWE		= 1;	//タイマ�?�吐�?部カウンタ書込み許可
-		RIIC0.TMOCNTL.BYTE 		= 0;	//タイ�?アウ�?
-		RIIC0.TMOCNTU.BYTE		= 0;	//
-		RIIC0.ICSR2.BIT.TMOF		= 0;	//タイ�?アウト検�?�フラグクリア
-		RIIC0.ICSR2.BIT.AL			= 0;	//
-		RIIC0.ICCR2.BIT.SP			= 0;	//
-		RIIC0.ICSR2.BIT.NACKF		= 0;	//
-		RIIC0.ICSR2.BIT.STOP		= 0;	//
-		RIIC0.ICIER.BIT.TIE 			= 0;	//　送信�?ータエンプティ割込み
-		RIIC0.ICIER.BIT.SPIE 		= 1;	//　送信�?ータエンプティ割込み
-		IEN(RIIC0,TXI0)				= 0;
-		RIIC0.ICIER.BIT.TEIE 		= 0;	//　送信終�?割込み　
-		IEN(RIIC0,TEI0)				= 0;
-		RIIC0.ICIER.BIT.SPIE 		= 0;	//　送信�?ータエンプティ割込み
-		if(stop_disen_flag==1){
-			RIIC0.ICCR1.BIT.IICRST=1;
-			RIIC0.ICCR1.BIT.ICE=1;
-			init_riic0();			
-			RIIC0.ICIER.BIT.TIE 			= 1;	//　送信�?ータエンプティ割込み
-			RIIC0.ICIER.BIT.TEIE 		= 0;	//　送信終�?割込み　
-			IEN(RIIC0,TXI0)				= 1;
-			IEN(RIIC0,TEI0)				= 0;
-			IEN(RIIC0,RXI0)			= 1;
-			RIIC0.ICIER.BIT.RIE 			= 1;	//　割込み
-			RIIC0.ICCR2.BIT.ST = 1;
-			receve_flag=1;	
-		}
-}
-int iic0_send(char* string , int data_num,int address){
-	int i,r_data;
-		 
-	if( RIIC0.ICSR2.BIT.TEND==1 || RIIC0.ICCR2.BIT.BBSY==1){
-		r_data=-1;
-	}else{
-		RIIC0.ICCR1.BIT.IICRST=1;
-		RIIC0.ICCR1.BIT.ICE=0;
-		init_riic0();
-		for(i=0;i<data_num;i++){
-			send_data[i+1]= *(string + i);
-		}
-		receve_flag=0;
-		stop_disen_flag=0;
-		send_data_num	 			= data_num;	
-		RIIC0.ICMR2.BIT.TMWE		= 1;
-		RIIC0.TMOCNTL.BYTE		= 0x0f;
-		RIIC0.TMOCNTU.BYTE		= 0x00;
-		RIIC0.ICMR2.BIT.TMWE		= 0;
-		RIIC0.ICIER.BIT.TMOIE 		= 1;	//タイ�?アウト割込み
-		RIIC0.ICIER.BIT.NAKIE		= 1;
-		RIIC0.ICIER.BIT.TIE 			= 1;	//　送信�?ータエンプティ割込み
-		RIIC0.ICIER.BIT.TEIE 		= 0;	//　送信終�?割込み　
-		IEN(RIIC0,TXI0)				= 1;
-		IEN(RIIC0,TEI0)				= 0;
-		RIIC0.ICCR2.BIT.ST = 1;	
-		send_data[0]				= (address<<1);
-	}
-	return r_data;
-}
-char* iic0_gets(){ 
-	 receve_fin_flag=0;
-	return receve_data_out;
-}
-
-int iic0_reqest_send( char* data , int r_num,int addr){
-	int out=1;
-	int i;
-	receve_fin_flag=0;
-		
-	if( RIIC0.ICSR2.BIT.TEND==1 || RIIC0.ICCR2.BIT.BBSY==1){
-		out=-1;
-	}else{
-		receve_flag=0;
-		stop_disen_flag=1;
-		///// �?部リセ�?�?  ///
-		RIIC0.ICCR1.BIT.ICE=0;
-		RIIC0.ICCR1.BIT.IICRST=1;
-		RIIC0.ICCR1.BIT.ICE=0;
-		init_riic0();
-		RIIC0.ICSR2.BIT.NACKF=0;
-		RIIC0.ICSR2.BIT.TMOF=0;
-		RIIC0.ICSR2.BIT.AL=0;	
-		///////////////////
-		for(i=0;i<sizeof(send_data);i++ ){
-			send_data[i]=0x00;
-		}
-		for(i=0;i<2;i++){
-			send_data[i+1]= *(data + i);
-		}
-		send_data_num				=2;	//送信�?ータは1バイ�?	
-		send_data[send_data_num]	=  ((addr<<1) | 0x01);//R/W#ビットを?��にして突っ込む
-		for(i=3;i<9;i++){
-			send_data[i]= 0x00;
-		}
-		receve_num=r_num;
-		RIIC0.ICMR2.BIT.TMWE		= 1;
-		RIIC0.TMOCNTL.BYTE		= 0x0f;
-		RIIC0.TMOCNTU.BYTE		= 0x00;
-		RIIC0.ICMR2.BIT.TMWE		= 0;
-		
-		RIIC0.ICIER.BIT.STIE			= 0;
-		RIIC0.ICIER.BIT.ALIE 		= 1;	
-		RIIC0.ICIER.BIT.TMOIE 		=1 ;	//タイ�?アウト割込み
-		RIIC0.ICIER.BIT.NAKIE		= 1;
-		RIIC0.ICIER.BIT.TIE 			= 1;	//　送信�?ータエンプティ割込み
-		IEN(RIIC0,TXI0)				= 1;
-		RIIC0.ICIER.BIT.TEIE 		= 0;	//　送信終�?割込み　
-		IEN(RIIC0,TEI0)				= 0;
-		RIIC0.ICCR2.BIT.ST = 1;	
-		receve_flag=0;
-		RIIC0.ICDRT=send_data[0]				= (addr<<1);
-	} 
-	return out;
-}
-
-int iic0_set_addr(int addr, int num){
-	int out=1;
-	switch(num){
-		case 0:
-			RIIC0.SARL0.BIT.SVA = addr;
-			break;
-		case 1:
-			RIIC0.SARL1.BIT.SVA = addr;
-			break;
-		case 2:
-			RIIC0.SARL2.BIT.SVA = addr;
-			break;
-		default:
-			out = -1;
-			break;
-	}
-	return out;
-}
-int  iic0_receve(char* p_data,int n){ 
-	int i,out;
-	if(receve_fin_flag==1){
-		receve_fin_flag=0;
-		for(i=0; i<=n ;i++){
-			*(p_data+i) = receve_data_out[i] ;	
-		}
-		for(i=0;i<sizeof(receve_data_out);i++){
-			receve_data_out[i]=0;
-		}
-		out=1;
-	}else {
-		out=-1;	
-	}
-	return out;
-}
 
 
 
@@ -704,6 +434,10 @@ void mode10( int x );
 void mode11( int x );
 void mode12( int x );
 void mode13( int x );
+void mode14( int x );
+static void lcd_signed_out( int pt, int x, int digits );
+static void mpu6050_poll( void );
+static void mpu6050_init( void );
 void mouse_search( int goal_x, int goal_y, int speed, int mode );
 void slalom_search( int goal_x, int goal_y, int speed, int mode );
 void com_go( int n );
@@ -814,6 +548,14 @@ void main(void)
       LCD_dec_out(  9, L_SEN, 3 ); // ���Z���T�l��LCD�����ɕ\��
       LCD_dec_out( 13, R_SEN, 3 ); // �E�Z���T�l��LCD�E���ɕ\��
       
+    }
+    else if( MODE == 14 )
+    {
+      mpu6050_poll();
+      lcd_signed_out(  2, mpu_gyx / 131, 4 );
+      //lcd_signed_out( 10, mpu_gyy, 4 );
+      //lcd_signed_out(  2 + 8, mpu_gyz, 4 );
+      //lcd_signed_out(  9 + 8, mpu_tmp, 4 );
     }
   }
 }
@@ -1306,6 +1048,7 @@ void change_mode( int x )
   else if( MODE == 11 ) mode11( DISP );   // Mode11:
   else if( MODE == 12 ) mode12( DISP );   // Mode12:
   else if( MODE == 13 ) mode13( DISP );   // Mode13:
+  else if( MODE == 14 ) mode14( DISP );   // Mode14:
 }
 //-------------------------------------------------------------------------
 //  ���[�h����
@@ -1327,6 +1070,7 @@ void exec_mode( void )
   else if( MODE == 11 ) mode11( EXEC );   // Mode11:
   else if( MODE == 12 ) mode12( EXEC );   // Mode12:
   else if( MODE == 13 ) mode13( EXEC );   // Mode13:
+  else if( MODE == 14 ) mode14( EXEC );   // Mode14:
 }
 
 //-------------------------------------------------------------------------
@@ -1840,6 +1584,101 @@ void mode13( int x )
   ccnt(0);
   slalom_search( goal_x, goal_y, GSPEEDvar, T_MODE );
 }
+
+//-------------------------------------------------------------------------
+//  Mode14 : Gyro Display (MPU-6050)
+//-------------------------------------------------------------------------
+void mode14( int x )
+{
+  if( x == DISP )
+  {
+    LCD_print( 0, "14:GYRO" );
+    LCD_print( 8, "        " );
+    pause( 1000 );
+    LCD_print( 0, "GX      " );
+    //LCD_print( 8, "GZ     T " );
+    return;
+  }
+
+  while( 1 ){
+    mpu6050_poll();
+    lcd_signed_out(  2, mpu_gyx / 131, 4 );
+    //lcd_signed_out( 10, mpu_gyy, 4 );
+    //lcd_signed_out(  2 + 8, mpu_gyz, 4 );
+    //lcd_signed_out(  9 + 8, mpu_tmp, 4 );
+    if( SW_EXEC == 0 ){
+      WaitKeyOff();
+      return;
+    }
+  }
+}
+
+static void lcd_signed_out( int pt, int x, int digits )
+{
+  int v = x;
+  if( v < 0 ){
+    LCD_DATA[ pt ] = '-';
+    if( v == -32768 )
+      v = 32767;
+    else
+      v = -v;
+  }else{
+    LCD_DATA[ pt ] = '+';
+  }
+  if( digits <= 4 && v > 9999 )
+    v = 9999;
+  LCD_dec_out( pt + 1, v, digits );
+}
+
+static void mpu6050_init( void )
+{
+  char data[ 2 ];
+
+  data[ 0 ] = MPU6050_REG_PWR_MGMT_1;
+  data[ 1 ] = 0x00;
+  iic0_send( data, 3, MPU6050_ADDR );
+}
+
+static void mpu6050_poll( void )
+{
+  char cmd[ 2 ];
+  char buf[ MPU6050_READ_COUNT ];
+
+  if( mpu_init_state == 0 ){
+    init_riic0();
+    mpu_init_state = 1;
+    mpu_req_pending = 0;
+    return;
+  }
+
+  if( mpu_init_state == 1 ){
+    if( RIIC0.ICCR2.BIT.BBSY == 0 ){
+      mpu6050_init();
+      mpu_init_state = 2;
+    }
+    return;
+  }
+
+  if( mpu_req_pending == 0 ){
+    cmd[ 0 ] = MPU6050_REG_ACCEL_XOUT_H;
+    cmd[ 1 ] = 0x00;
+    if( iic0_reqest_send( cmd, MPU6050_READ_COUNT - 1, MPU6050_ADDR ) == 1 )
+      mpu_req_pending = 1;
+    return;
+  }
+
+  if( iic0_receve( buf, MPU6050_READ_COUNT - 1 ) == 1 ){
+    mpu_acx = (short)(((unsigned char)buf[ 0 ] << 8) | (unsigned char)buf[ 1 ]);
+    mpu_acy = (short)(((unsigned char)buf[ 2 ] << 8) | (unsigned char)buf[ 3 ]);
+    mpu_acz = (short)(((unsigned char)buf[ 4 ] << 8) | (unsigned char)buf[ 5 ]);
+    mpu_tmp = (short)(((unsigned char)buf[ 6 ] << 8) | (unsigned char)buf[ 7 ]);
+    mpu_gyx = (short)(((unsigned char)buf[ 8 ] << 8) | (unsigned char)buf[ 9 ]);
+    mpu_gyy = (short)(((unsigned char)buf[ 10 ] << 8) | (unsigned char)buf[ 11 ]);
+    mpu_gyz = (short)(((unsigned char)buf[ 12 ] << 8) | (unsigned char)buf[ 13 ]);
+    mpu_req_pending = 0;
+  }
+}
+
 
 
 //-------------------------------------------------------------------------

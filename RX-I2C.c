@@ -1,4 +1,13 @@
 #include"RX-I2C.h"
+char send_data[50];
+char receve_data[50];
+char receve_data_out[50];
+int send_data_num;
+int receve_num;
+int stop_disen_flag;
+int receve_flag;
+int receve_fin_flag;
+
 #define CLK400
 //#define CLK100
 void init_riic0(void){

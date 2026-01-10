@@ -1,20 +1,26 @@
 品質記録情報
-2026年1月10日 15:38:03
+2026年1月10日 16:49:54
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(274):W0520326:"inline" is not allowed
-RX220Mouse2.c(285):W0520326:"inline" is not allowed
-RX220Mouse2.c(1228):W0520159:Declaration is incompatible with previous "gspeed_index_for_value" (declared at line 682)
-RX220Mouse2.c(1228):W0520172:External/internal linkage conflict with previous declaration
-RX220Mouse2.c(1255):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1348):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1353):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(292):W0520326:"inline" is not allowed
+RX220Mouse2.c(303):W0520326:"inline" is not allowed
+RX220Mouse2.c(1263):W0520159:Declaration is incompatible with previous "gspeed_index_for_value" (declared at line 715)
+RX220Mouse2.c(1263):W0520172:External/internal linkage conflict with previous declaration
+RX220Mouse2.c(1290):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1383):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(1388):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
+RX220Mouse2.c(166):W0520550:Variable "mpu_acx" was set but never used
+RX220Mouse2.c(167):W0520550:Variable "mpu_acy" was set but never used
+RX220Mouse2.c(168):W0520550:Variable "mpu_acz" was set but never used
+RX220Mouse2.c(169):W0520550:Variable "mpu_tmp" was set but never used
+RX220Mouse2.c(171):W0520550:Variable "mpu_gyy" was set but never used
+RX220Mouse2.c(172):W0520550:Variable "mpu_gyz" was set but never used
 C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 3 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 W0561016:The evaluation version of CC-RX V3 is valid for the remaining 3 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
 Renesas Optimizing Linker Completed
------- ビルド終了(エラー:0個, 警告:9個)(RX220Mouse2, DefaultBuild) ------
+------ ビルド終了(エラー:0個, 警告:15個)(RX220Mouse2, DefaultBuild) ------
 
 --- CommandFile 1 ---
 DefaultBuild\RX220Mouse2.clnk :
@@ -41,8 +47,8 @@ DefaultBuild\RX220Mouse2.clnk :
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 93500b375ecd8532072f41498464584a9ee4f825
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 995e7428cdf4219cda224640a466e894ae1c036b
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: cb86944c1cad703ada85839ac8f30c4b4f89add1
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: f926582f003e2c8a8e8ec20b258d117dfeb774b7
 
 
 --- システム情報 ---
@@ -70,11 +76,11 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 995e7428cdf4219cda224640a466e894ae1
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  95 MB
+  98 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
-  713
+  714
  *開いているファイル
   0 editors, 0 files, 0 KB
 
