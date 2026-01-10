@@ -144,6 +144,9 @@ static const short GSSPEED[] = { 300, 400, 500, 600, 700, 800, 900, 1000 };  // 
 #define SLALOM_DATA_VERSION 0x0003 // format version for slalom step data
 #define GOAL_DATA_MAGIC 0xC33C    // goal selection validity marker
 #define GOAL_DATA_VERSION 0x0001  // format version for goal selection
+#define GO_STEPDATA_BK 7          // GO_STEP??????
+#define GO_STEP_DATA_MAGIC 0x3CC3 // GO_STEP validity marker
+#define GO_STEP_DATA_VERSION 0x0001 // format version for GO_STEP data
 //---------------------------------------------------------------
 //  グローバル変数定義
 //---------------------------------------------------------------
@@ -438,6 +441,8 @@ void slalom_step_writeDF(void);	// store slalom step data in DataFlash
 void slalom_step_readDF(void);	// load slalom step data from DataFlash
 void goal_choice_writeDF(void);	// store goal selection in DataFlash
 void goal_choice_readDF(void);	// load goal selection from DataFlash
+void go_step_writeDF(void);	// store GO_STEP in DataFlash
+void go_step_readDF(void);	// load GO_STEP from DataFlash
 void fcu_reset(void);		// FCUをリセット 
 void fcu_tope(void) ;		//  FCUをP/Eモードにする  
 void fcu_toread(void);		//  FCUを読み込みモードにする  
@@ -663,7 +668,7 @@ void load_param( void )
   F_LIM   = 170;    // 前 11/6[71-340-925] 100 150
   F_LIM2  =120;    // 2マス先前壁
   // 走行パラメータ  // 1-2相励磁
-    GO_STEP   = 1600; // 1区間前進ステップ数  
+    GO_STEP   = 1620; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
     SLALOM_STEP_FORWARD = 20;  // スラローム旋回ステップ数（内側）
     SLALOM_STEP_OUT = 40; // スラローム旋回ステップ
@@ -696,6 +701,7 @@ void load_param( void )
   set_slalom_steps_for_speed( gspeed_index );
   sensor_ref_readDF();
   goal_choice_readDF();
+  go_step_readDF();
 }
 //---------------------------------------------------------------
 //  センサ中央値更新
@@ -1146,7 +1152,13 @@ void mode2(int x)
     if( SW_UP   == 0 ) { GO_STEP += 10; WaitKeyOff(); }
     if( SW_DOWN == 0 ) { GO_STEP -= 10; WaitKeyOff(); }
 //  if( SW_EXEC == 0 ) { WaitKeyOff();  com_go( 1 );  com_stop(); }
-    if( SW_EXEC == 0 ) { WaitKeyOff();  com_go(1 );  com_stop(); break; }
+    if( SW_EXEC == 0 ) {
+      WaitKeyOff();
+      go_step_writeDF();
+      com_go(1 );
+      com_stop();
+      break;
+    }
   }
 }
 //-------------------------------------------------------------------------
@@ -1545,6 +1557,7 @@ void mode13( int x )
 void mouse_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion, next_motion, zerozero;
+  zerozero = 0;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
@@ -1651,6 +1664,7 @@ void mouse_search( int goal_x, int goal_y, int spd, int mode )
 void slalom_search( int goal_x, int goal_y, int spd, int mode )
 {
   short motion, next_motion, zerozero;
+  zerozero = 0;
   reset_wall_samples();
   if( pos_x == 0 && pos_y == 0 ){
     start_back_wall_contact();
@@ -1687,7 +1701,7 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     }
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
-      while( STEP < GO_STEP / 2 - 300 );  // 少し進む
+      while( STEP < GO_STEP / 2 - 250 );  // 少し進む
     }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 600 ){ // 速度700以上で次の行動が右折or左折の場合、前進しない
       control_mode = 0; // 姿勢制御OFF
       while( STEP < 200 );  // ほとんど進まない
@@ -2176,6 +2190,27 @@ void goal_choice_readDF(void)
   if( data[2] >= GOAL_CHOICE_COUNT )
     return;
   set_goal_choice_index( (int)data[2] );
+}
+
+//-------------------------------------------------------------------------
+//  GO_STEP persistence
+//-------------------------------------------------------------------------
+void go_step_writeDF(void)
+{
+  unsigned short data[64] = {0};
+  data[0] = GO_STEP_DATA_MAGIC;
+  data[1] = GO_STEP_DATA_VERSION;
+  data[2] = (unsigned short)GO_STEP;
+  DFlash_bprog(GO_STEPDATA_BK, data);
+}
+
+void go_step_readDF(void)
+{
+  unsigned short data[64];
+  DFlash_bread(GO_STEPDATA_BK, data);
+  if( data[0] != GO_STEP_DATA_MAGIC || data[1] != GO_STEP_DATA_VERSION )
+    return;
+  GO_STEP = (short)data[2];
 }
 //-------------------------------------------------------------------------
 //  FCUリセット  1/30
