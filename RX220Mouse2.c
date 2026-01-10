@@ -660,7 +660,7 @@ void load_param( void )
   // 壁の有無判定用しきい値:各センサ壁あり最小値と壁なし値の中間値
   R_LIM   =  170;    // 右 11/6[147-459-537,317] 350
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
-  F_LIM   = 190;    // 前 11/6[71-340-925] 100 150
+  F_LIM   = 170;    // 前 11/6[71-340-925] 100 150
   F_LIM2  =120;    // 2マス先前壁
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1600; // 1区間前進ステップ数  
@@ -681,7 +681,7 @@ void load_param( void )
     slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
     slalom_step_forward_table[gspeed_index_for_value(400)] = 80;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
-    slalom_step_forward_table[gspeed_index_for_value(500)] = 2;  // 速度500用
+    slalom_step_forward_table[gspeed_index_for_value(500)] = 40;  // 速度500用
     slalom_step_out_table[gspeed_index_for_value(500)] = 32; // 速度500用
     slalom_step_forward_table[gspeed_index_for_value(600)] = 2;  // 速度600用
     slalom_step_out_table[gspeed_index_for_value(600)] = 18; // 速度600用
