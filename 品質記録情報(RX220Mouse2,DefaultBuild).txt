@@ -1,54 +1,13 @@
 品質記録情報
-2026年1月10日 17:21:51
+2026年1月11日 23:49:16
 
 ------ ビルド開始(RX220Mouse2, DefaultBuild) ------
-C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\ccrx.exe RX220Mouse2.c -isa=rxv1 -nofpu -endian=big -dbl_size=8 -signed_char -lang=c -debug -g_line -optimize=0 -nologo -output=obj=DefaultBuild\RX220Mouse2.obj
-RX220Mouse2.c(299):W0520326:"inline" is not allowed
-RX220Mouse2.c(310):W0520326:"inline" is not allowed
-RX220Mouse2.c(1274):W0520159:Declaration is incompatible with previous "gspeed_index_for_value" (declared at line 724)
-RX220Mouse2.c(1274):W0520172:External/internal linkage conflict with previous declaration
-RX220Mouse2.c(1301):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1394):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(1399):W0520167:Argument of type "const char *" is incompatible with parameter of type "char *"
-RX220Mouse2.c(166):W0520550:Variable "mpu_acx" was set but never used
-RX220Mouse2.c(167):W0520550:Variable "mpu_acy" was set but never used
-RX220Mouse2.c(168):W0520550:Variable "mpu_acz" was set but never used
-RX220Mouse2.c(169):W0520550:Variable "mpu_tmp" was set but never used
-RX220Mouse2.c(171):W0520550:Variable "mpu_gyy" was set but never used
-RX220Mouse2.c(172):W0520550:Variable "mpu_gyz" was set but never used
-C:\Program Files (x86)\Renesas Electronics\CS+\CC\CC-RX\V3.07.00\Bin\rlink.exe -subcommand=DefaultBuild\RX220Mouse2.clnk
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 3 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-W0561016:The evaluation version of CC-RX V3 is valid for the remaining 3 days. After that, link size limit (128 Kbyte) will be applied. Please consider purchasing the product.
-Renesas Optimizing Linker Completed
------- ビルド終了(エラー:0個, 警告:15個)(RX220Mouse2, DefaultBuild) ------
-
---- CommandFile 1 ---
-DefaultBuild\RX220Mouse2.clnk :
--library=DefaultBuild\RX220Mouse2.lib
--input=DefaultBuild\dbsct.obj
--input=DefaultBuild\intprg.obj
--input=DefaultBuild\resetprg.obj
--input=DefaultBuild\RX220Mouse2.obj
--input=DefaultBuild\sbrk.obj
--input=DefaultBuild\vecttbl.obj
--noprelink
--output=DefaultBuild\RX220Mouse2.abs
--list=DefaultBuild\RX220Mouse2.map
--show=symbol,total_size
--nooptimize
--start=B_1,R_1,B_2,R_2,B,R,SU,SI/04,PResetPRG/0FFFC0000,C_1,C_2,C,C$DSEC,C$BSEC,C$INIT,C$VTBL,C$VECT,D_1,D_2,D,P,PIntPRG,W_1,W_2,W,L/0FFFC0100,FIXEDVECT/0FFFFFFD0
--rom=D=R,D_1=R_1,D_2=R_2
--nologo
--end
--input=DefaultBuild\RX220Mouse2.abs
--output=DefaultBuild\RX220Mouse2.mot
--form=stype
--exit
+------ ビルド終了(エラー:0個, 警告:0個)(RX220Mouse2, DefaultBuild) ------
 
 
 --- SHA1 hash value of output files ---
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: f6373062aca17904f1770a56cbed19eb90a7b626
-D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 73c889b330aecd41ad70810a23c95182e9845491
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.abs: 685a6412ce5ba043e47d9b0e4b667c7da3cc8d0f
+D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: e16283125927c55eda9145b4983453b8dc145da3
 
 
 --- システム情報 ---
@@ -59,7 +18,7 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 73c889b330aecd41ad70810a23c95182e98
 *.NET Framework バージョン
  Microsoft .NET Framework 4 [.NET 4.8 or later] (533320)
 *WebView2 バージョン
- 143.0.3650.96
+ 143.0.3650.139
 
 --- アプリケーション情報 ---
 *製品名
@@ -76,11 +35,11 @@ D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot: 73c889b330aecd41ad70810a23c95182e98
  C:\Program Files (x86)\Renesas Electronics\CS+\CC
 *メモリ使用量
  *プライベート・ワーキング・セット
-  95 MB
+  96 MB
  *GDIオブジェクト数
   1991
  *USERオブジェクト数
-  713
+  712
  *開いているファイル
   0 editors, 0 files, 0 KB
 

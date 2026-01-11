@@ -101,6 +101,7 @@ void abort(void);
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_REG_ACCEL_XOUT_H 0x3B
 #define MPU6050_READ_COUNT 14
+#define GYRO_AVG_COUNT 5
 
 // ゴール座標候補一覧
 typedef struct {
@@ -179,6 +180,14 @@ static short mpu_gyx_offset;
 static short mpu_gyy_offset;
 static short mpu_gyz_offset;
 static unsigned char mpu_sample_ready;
+static short mpu_gyx_hist[ GYRO_AVG_COUNT ];
+static short mpu_gyy_hist[ GYRO_AVG_COUNT ];
+static short mpu_gyz_hist[ GYRO_AVG_COUNT ];
+static long mpu_gyx_sum;
+static long mpu_gyy_sum;
+static long mpu_gyz_sum;
+static unsigned char mpu_gyro_hist_index;
+static unsigned char mpu_gyro_hist_count;
 //ブザー関連 : 休符,ド,ド#,レ,レ#,ミ,ファ,ファ#,ソ,ソ#,ラ,ラ#,シ,ド
 enum beep_tone {
   BEEP_MUTE = 0,
@@ -1701,12 +1710,20 @@ static void mpu6050_poll( void )
 {
   char cmd[ 2 ];
   char buf[ MPU6050_READ_COUNT ];
+  short gyro_x;
+  short gyro_y;
+  short gyro_z;
 
   if( mpu_init_state == 0 ){
     init_riic0();
     mpu_init_state = 1;
     mpu_req_pending = 0;
     mpu_sample_ready = 0;
+    mpu_gyx_sum = 0;
+    mpu_gyy_sum = 0;
+    mpu_gyz_sum = 0;
+    mpu_gyro_hist_index = 0;
+    mpu_gyro_hist_count = 0;
     return;
   }
 
@@ -1734,9 +1751,28 @@ static void mpu6050_poll( void )
     mpu_gyx_raw = (short)(((unsigned char)buf[ 8 ] << 8) | (unsigned char)buf[ 9 ]);
     mpu_gyy_raw = (short)(((unsigned char)buf[ 10 ] << 8) | (unsigned char)buf[ 11 ]);
     mpu_gyz_raw = (short)(((unsigned char)buf[ 12 ] << 8) | (unsigned char)buf[ 13 ]);
-    mpu_gyx = (short)(mpu_gyx_raw - mpu_gyx_offset);
-    mpu_gyy = (short)(mpu_gyy_raw - mpu_gyy_offset);
-    mpu_gyz = (short)(mpu_gyz_raw - mpu_gyz_offset);
+    gyro_x = (short)(mpu_gyx_raw - mpu_gyx_offset);
+    gyro_y = (short)(mpu_gyy_raw - mpu_gyy_offset);
+    gyro_z = (short)(mpu_gyz_raw - mpu_gyz_offset);
+    if( mpu_gyro_hist_count < GYRO_AVG_COUNT ) {
+      mpu_gyro_hist_count++;
+    } else {
+      mpu_gyx_sum -= mpu_gyx_hist[ mpu_gyro_hist_index ];
+      mpu_gyy_sum -= mpu_gyy_hist[ mpu_gyro_hist_index ];
+      mpu_gyz_sum -= mpu_gyz_hist[ mpu_gyro_hist_index ];
+    }
+    mpu_gyx_hist[ mpu_gyro_hist_index ] = gyro_x;
+    mpu_gyy_hist[ mpu_gyro_hist_index ] = gyro_y;
+    mpu_gyz_hist[ mpu_gyro_hist_index ] = gyro_z;
+    mpu_gyx_sum += gyro_x;
+    mpu_gyy_sum += gyro_y;
+    mpu_gyz_sum += gyro_z;
+    mpu_gyro_hist_index++;
+    if( mpu_gyro_hist_index >= GYRO_AVG_COUNT )
+      mpu_gyro_hist_index = 0;
+    mpu_gyx = (short)(mpu_gyx_sum / mpu_gyro_hist_count);
+    mpu_gyy = (short)(mpu_gyy_sum / mpu_gyro_hist_count);
+    mpu_gyz = (short)(mpu_gyz_sum / mpu_gyro_hist_count);
     mpu_sample_ready = 1;
     mpu_req_pending = 0;
   }
