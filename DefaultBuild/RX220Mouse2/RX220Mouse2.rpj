@@ -8,6 +8,7 @@
     <Endian>RFLG_ENDIAN_BIG</Endian>
     <ProgramFiles>
       <Item Address="00000000" Type="SREC">D:\RX220Mouse2\DefaultBuild\RX220Mouse2.mot</Item>
+      <Item Address="00000000" Type="SREC">D:\RX220Mouse2\DefaultBuild\RX220Mouse2DF.mot</Item>
     </ProgramFiles>
   </OperationTab>
   <OperationSettingTab>
@@ -27,7 +28,7 @@
   <BlockSettingTab>
     <ListErase>
     </ListErase>
-    <ListPV>0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25</ListPV>
+    <ListPV>0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21</ListPV>
     <ListLockbit>
     </ListLockbit>
     <ListOTP>
@@ -84,7 +85,7 @@
     <ToolDisconnectReset>Low</ToolDisconnectReset>
     <ToolResetSignalFlag>09000000</ToolResetSignalFlag>
     <ToolInterface>IFTYPE_UART2</ToolInterface>
-    <ToolSpeed>9600</ToolSpeed>
+    <ToolSpeed>115200</ToolSpeed>
     <ToolWideVoltage>False</ToolWideVoltage>
     <MainClock>32000000</MainClock>
     <AutoAuthen>False</AutoAuthen>

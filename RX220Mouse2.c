@@ -363,6 +363,7 @@ short    R_LIM;            // 右壁有無しきい値
 short    L_LIM;            // 左壁有無しきい値
 short    F_LIM;            // 前壁有無しきい値
 short    F_LIM2;           // 2マス先前壁有無しきい値
+short    F_LIM_SLA;        // スラロームオフセット前壁有無しきい値
 // モータ関連
 ushort   timerL;           // 左タイマー設定値
 ushort   timerR;           // 右タイマー設定値
@@ -726,6 +727,7 @@ void load_param( void )
   L_LIM   = 150;    // 左 11/6[387-612-587,478] 500
   F_LIM   = 150;    // 前 11/6[71-340-925] 100 150
   F_LIM2  =100;    // 2マス先前壁
+  F_LIM_SLA = 500; // スラロームオフセット前壁
   // 走行パラメータ  // 1-2相励磁
     GO_STEP   = 1620; // 1区間前進ステップ数  
     TURN_STEP = 550;  // 90度旋回ステップ数  
@@ -741,7 +743,7 @@ void load_param( void )
     for( i = gspeed_index_for_value(600); i < GSPEED_LEVELS; i++ ){
       slalom_inner_speed_table[ i ] = 50; // 速度600以上は50に固定
     }
-    slalom_step_forward_table[gspeed_index_for_value(300)] = 110;  // 速度300用
+    slalom_step_forward_table[gspeed_index_for_value(300)] = 10;  // 速度300用
     slalom_step_out_table[gspeed_index_for_value(300)] = 40; // 速度300用
     slalom_step_forward_table[gspeed_index_for_value(400)] = 34;  // 速度400用
     slalom_step_out_table[gspeed_index_for_value(400)] = 34; // 速度400用
@@ -1962,12 +1964,12 @@ void slalom_search( int goal_x, int goal_y, int spd, int mode )
     }
     if(motion == 1 || motion ==3 ){
       // 前の行動が右折or左折の場合、距離を少なくする。
-      while( STEP < GO_STEP / 2 - 100 );  // 少し進む
+      while( STEP < GO_STEP / 2 );  // 少し進む
     }else if( (next_motion == 1 || next_motion == 3) && GSPEEDvar >= 600 ){ // 速度700以上で次の行動が右折or左折の場合、前進しない
       control_mode = 0; // 姿勢制御OFF
       while( STEP < 200 );  // ほとんど進まない
     }else{
-      while( STEP < GO_STEP / 2 );  // 半区間進む 
+      while( STEP < GO_STEP / 2 && F_SEN < F_LIM_SLA );  // 半区間進む 
     }
     // 柱まで進んだら
     // 壁情報取得＆MAPデータ上書き
@@ -2093,9 +2095,9 @@ void com_slalom_turn( int t_mode ){
   rdir = 0; ldir = 0;                     // 回転方向を直進
   if( t_mode == 0 ) {
     speed = GSPEEDvar;
-    while( speed > speed_now );
+    while( speed > speed_now && F_SEN < F_LIM_SLA );
     speed = speed_now;
-    while( step_r < SLALOM_STEP_FORWARD && F_SEN < F_REF - 500 || R_SEN > R_LIM );
+    while( step_r < SLALOM_STEP_FORWARD && F_SEN < F_LIM_SLA || R_SEN > R_LIM );
     control_mode = 2;           // スラローム用姿勢制御
     step_r = 0;                               //右ステップ数をリセット
     step_l = 0;                               //左ステップ数をリセット
@@ -2104,9 +2106,9 @@ void com_slalom_turn( int t_mode ){
   }
   else if( t_mode == 1 ) {
     speed = GSPEEDvar;
-    while( speed > speed_now );
+    while( speed > speed_now && F_SEN < F_LIM_SLA );
     speed = speed_now;
-    while( step_l < SLALOM_STEP_FORWARD && F_SEN < F_REF - 500 || L_SEN > L_LIM );
+    while( step_l < SLALOM_STEP_FORWARD && F_SEN < F_LIM_SLA || L_SEN > L_LIM );
     control_mode = 3;           // スラローム用姿勢制御
     step_r = 0;                               //右ステップ数をリセット
     step_l = 0;                               //左ステップ数をリセット
