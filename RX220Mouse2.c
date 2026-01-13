@@ -101,7 +101,7 @@ void abort(void);
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_REG_ACCEL_XOUT_H 0x3B
 #define MPU6050_READ_COUNT 14
-#define GYRO_AVG_COUNT 5
+#define GYRO_AVG_COUNT 20
 
 // ƒS[ƒ‹À•WŒó•âˆê——
 typedef struct {
@@ -168,7 +168,7 @@ static short mpu_acx;
 static short mpu_acy;
 static short mpu_acz;
 static short mpu_tmp;
-static short mpu_gyx;
+static float mpu_gyx;
 static short mpu_gyy;
 static short mpu_gyz;
 static unsigned char mpu_init_state;
@@ -570,7 +570,15 @@ void main(void)
     else if( MODE == 14 )
     {
       mpu6050_poll();
-      lcd_signed_out(  2, mpu_gyx / 131, 4 );
+      {
+        float gyro_x = mpu_gyx;
+        int gyro_disp;
+        if( gyro_x >= 0.0f )
+          gyro_disp = (int)((gyro_x + 65.0f) / 131.0f);
+        else
+          gyro_disp = (int)((gyro_x - 65.0f) / 131.0f);
+        lcd_signed_out(  2, gyro_disp, 4 );
+      }
       //lcd_signed_out( 10, mpu_gyy, 4 );
       //lcd_signed_out(  2 + 8, mpu_gyz, 4 );
       //lcd_signed_out(  9 + 8, mpu_tmp, 4 );
@@ -1610,6 +1618,7 @@ void mode13( int x )
 //-------------------------------------------------------------------------
 void mode14( int x )
 {
+  int disp_div = 0;
   if( x == DISP )
   {
     LCD_print( 0, "14:GYRO" );
@@ -1619,11 +1628,23 @@ void mode14( int x )
     LCD_print( 8, "GY" );
     return;
   }
-
+  
   while( 1 ){
     mpu6050_poll();
-    lcd_signed_out(  2, mpu_gyx / 131, 4 );
-    //lcd_signed_out( 10, mpu_gyy, 4 );
+    disp_div++;
+    if( disp_div >= 100 ){
+      disp_div = 0;
+      {
+        float gyro_x = mpu_gyx;
+        int gyro_disp;
+        if( gyro_x >= 0.0f )
+          gyro_disp = (int)((gyro_x + 65.0f) / 131.0f);
+        else
+          gyro_disp = (int)((gyro_x - 65.0f) / 131.0f);
+        lcd_signed_out(  2, gyro_disp, 4 );
+      }
+      //lcd_signed_out( 10, mpu_gyy, 4 );
+    }
     if( SW_EXEC == 0 ){
       WaitKeyOff();
       return;
@@ -1770,7 +1791,7 @@ static void mpu6050_poll( void )
     mpu_gyro_hist_index++;
     if( mpu_gyro_hist_index >= GYRO_AVG_COUNT )
       mpu_gyro_hist_index = 0;
-    mpu_gyx = (short)(mpu_gyx_sum / mpu_gyro_hist_count);
+    mpu_gyx = (float)mpu_gyx_sum / mpu_gyro_hist_count;
     mpu_gyy = (short)(mpu_gyy_sum / mpu_gyro_hist_count);
     mpu_gyz = (short)(mpu_gyz_sum / mpu_gyro_hist_count);
     mpu_sample_ready = 1;
